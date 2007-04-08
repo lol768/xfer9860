@@ -26,14 +26,18 @@
 #include <config.h>
 #endif
 
+#include <usb.h>
 #include <stdio.h>
 #include <string.h>
-#include <usb.h>
-
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #include "Casio9860.h"
 
 int main(int argc, char *argv[]) {
 	int retval = 0;
+	char *buffer;
+	struct stat file_info;
 
 	if (argc < 2) {
 		printf("Upload a file to the fx-9860 by USB\nUsage: %s <filename>\n", argv[0]);
@@ -74,6 +78,8 @@ int main(int argc, char *argv[]) {
 		goto exit_unclaim;
 	}
 
+	stat(argv[1], &file_info);
+	printf("Filesize: %i\n", file_info.st_size);
 
 	exit_unclaim:
 		usb_release_interface(usb_handle, 0);
