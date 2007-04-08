@@ -2,6 +2,8 @@
  *   Copyright (C) 2007							   *
  *	Manuel Naranjo <naranjo.manuel@gmail.com>			   *
  *	Andreas Bertheussen <andreasmarcel@gmail.com>			   *
+ *   Copyright (C) 2004							   *
+ *	Greg Kroah-Hartman <greg@kroah.com>				   *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
