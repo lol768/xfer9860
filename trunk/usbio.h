@@ -17,3 +17,16 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
+
+#ifndef USBIO_H
+#define USBIO_H
+
+#include <usb.h>
+
+#define USB_WRITE_TIMEOUT 300
+#define USB_READ_TIMEOUT 1000
+
+int ReadUSB(struct usb_dev_handle *usb_handle, char* buffer, int length);
+int WriteUSB(struct usb_dev_handle *usb_handle, char* buffer, int length);
+
+#endif

@@ -17,3 +17,21 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
+#include "usbio.h"
+
+#include <stdio.h>
+#include <usb.h>
+
+int ReadUSB(struct usb_dev_handle *usb_handle, char *buffer, int length) {
+	int ret = 0;
+	ret = usb_bulk_read(usb_handle, 0x82, buffer, length, USB_READ_TIMEOUT);
+	if (ret < 0) { printf("Could not read, ERROR: %i", ret); }
+	return ret;
+}
+
+int WriteUSB(struct usb_dev_handle *usb_handle, char *buffer, int length) {
+	int ret = 0;
+	ret = usb_bulk_write(usb_handle, 0x1, buffer, length, USB_WRITE_TIMEOUT);
+	if (ret < 0) { printf("Could not write, ERROR: %i", ret); }
+	return ret;
+}
