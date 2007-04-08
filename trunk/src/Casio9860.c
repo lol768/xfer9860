@@ -2,8 +2,6 @@
  *   Copyright (C) 2007													   *
  *		Manuel Naranjo <naranjo.manuel@gmail.com>						   *
  *		Andreas Bertheussen <andreasmarcel@gmail.com>					   *
- *   Copyright (C) 2004													   *
- *		Greg Kroah-Hartman <greg@kroah.com>								   *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -21,58 +19,54 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include "Casio9860.h"
-
-int main(int argc, char *argv[]) {
-	if (argc < 2) {
-		printf("Upload a file to the fx-9860 by USB\nUsage: %s <filename>\n");
-		return 0;
+struct usb_device *device_init(void) {
+	struct usb_bus *usb_bus;
+	struct usb_device *dev;
+	usb_init();
+	usb_find_busses();
+	usb_find_devices();
+	for (usb_bus = usb_busses;
+		usb_bus;
+		usb_bus = usb_bus->next) {
+		for (dev = usb_bus->devices; dev; dev = dev->next) {
+			if ((dev->descriptor.idVendor == C9860_VENDOR_ID) && (dev->descriptor.idProduct == C9860_PRODUCT_ID))
+				return dev;
+		}
 	}
+	return NULL;
+}
 
+int init_9860(struct usb_dev_handle *usb_handle) {
+	int retval;
+	char* buffer;
+	buffer = calloc(0x12, sizeof(char));
 
+	retval = usb_control_msg(usb_handle, 0x80, 0x6, 0x100, 0, buffer, 0x12, 200);
 
-	struct usb_device *usb_dev;
-	struct usb_dev_handle *usb_handle;
-
-	usb_dev = device_init();
-	if (usb_dev == NULL) {
-		fprintf(stderr, "The calculator does not seem to be connected\n");
-		goto exit;
-	}
-
-	usb_handle = usb_open(usb_dev);
-	if (usb_handle == NULL) {
-		fprintf(stderr, "Unable to open the USB device\n");
-		goto exit_close;
-	}
-
-	retval = usb_claim_interface(usb_handle, 0);
 	if (retval < 0) {
-		fprintf(stderr, "Unable to claim USB Interface\n");
-		goto exit_unclaim;
+		fprintf(stderr, "Unable to send first message\n");
+		return retval;
 	}
 
-	retval = init_9860(usb_handle);
-	if (retval < 0){
-		fprintf(stderr, "Couldn't initilizate connection\n");
-		goto exit_unclaim;
+	buffer = (char *)realloc(buffer, (size_t) (0x29 * sizeof(char)));
+
+	retval = usb_control_msg(usb_handle, 0x80, 0x6, 0x200, 0, buffer, 0x29, 250);
+
+	if (retval < 0) {
+		fprintf(stderr, "Unable to send second message\n");
+		return retval;
 	}
 
+	buffer = (char *)realloc(buffer, (size_t) (0x1 * sizeof(char)));
 
-	exit_unclaim:
-		usb_release_interface(usb_handle, 0);
-	exit_close:
-    	usb_close(usb_handle);
-		free(usb_dev);
-	exit:
-	exit(retval);
-	return EXIT_SUCCESS;
+	retval = usb_control_msg(usb_handle, 0x41, 0x1, 0x0, 0, buffer, 0x0, 250);
+
+	if (retval < 0) {
+		fprintf(stderr, "Unable to send third message\n");
+		return retval;
+	}
+
+	free(buffer);
+
+	return 0;
 }
