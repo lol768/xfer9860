@@ -27,25 +27,23 @@
 #endif
 
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
-#include "Casio9860.h"
 #include <usb.h>
+
+#include "Casio9860.h"
 
 int main(int argc, char *argv[]) {
 	int retval = 0;
+
 	if (argc < 2) {
 		printf("Upload a file to the fx-9860 by USB\nUsage: %s <filename>\n", argv[0]);
 		return 0;
 	}
 	FILE *source = fopen(argv[1], "r");
 	if (source == NULL) {
-		printf("Cannot open file\n");
-		return 0;
+		printf("Unable to open file: %s\n", argv[1]);
+		goto exit;
 	}
-
-
-	fclose(source);
 
 	struct usb_device *usb_dev;
 	struct usb_dev_handle *usb_handle;
@@ -83,6 +81,6 @@ int main(int argc, char *argv[]) {
     	usb_close(usb_handle);
 		free(usb_dev);
 	exit:
-	exit(retval);
+		free(source);
 	return EXIT_SUCCESS;
 }
