@@ -1,8 +1,8 @@
 <?xml version = '1.0'?>
 <kdevelop>
   <general>
-    <author>Andreas B.</author>
-    <email>andreas@nitrobox</email>
+    <author>Andreas Bertheussen</author>
+    <email>andreasmarcel@gmail.com</email>
     <version>0.1</version>
     <projectmanagement>KDevAutoProject</projectmanagement>
     <primarylanguage>C</primarylanguage>
@@ -12,6 +12,9 @@
     </keywords>
     <versioncontrol>kdevsubversion</versioncontrol>
     <ignoreparts/>
+    <projectdirectory>.</projectdirectory>
+    <absoluteprojectpath>false</absoluteprojectpath>
+    <description/>
   </general>
   <kdevautoproject>
     <general>
@@ -21,6 +24,7 @@
     <run>
       <mainprogram>src/xfer9860</mainprogram>
       <terminal>true</terminal>
+      <directoryradio>executable</directoryradio>
     </run>
     <configurations>
       <optimized>
@@ -39,6 +43,12 @@
         <cflags>-O0 -g3 </cflags>
       </debug>
     </configurations>
+    <make>
+      <envvars>
+        <envvar value="1" name="WANT_AUTOCONF_2_5" />
+        <envvar value="1" name="WANT_AUTOMAKE_1_6" />
+      </envvars>
+    </make>
   </kdevautoproject>
   <kdevdoctreeview>
     <ignoretocs>
@@ -89,6 +99,7 @@
     </ignoredoxygen>
   </kdevdoctreeview>
   <kdevfilecreate>
+    <filetypes/>
     <useglobaltypes>
       <type ext="c" />
       <type ext="h" />
@@ -98,12 +109,19 @@
     <groups>
       <group pattern="*.h" name="Header files" />
       <group pattern="*.c" name="Source files" />
+      <hidenonprojectfiles>false</hidenonprojectfiles>
+      <hidenonlocation>false</hidenonlocation>
     </groups>
+    <tree>
+      <hidepatterns>*.o,*.lo,CVS</hidepatterns>
+      <hidenonprojectfiles>false</hidenonprojectfiles>
+    </tree>
   </kdevfileview>
   <kdevdocumentation>
     <projectdoc>
       <docsystem>Doxygen Documentation Collection</docsystem>
       <docurl>xfer9860.tag</docurl>
+      <usermanualurl/>
     </projectdoc>
   </kdevdocumentation>
   <substmap>
@@ -112,7 +130,7 @@
     <APPNAMESC>Xfer9860</APPNAMESC>
     <APPNAMEUC>XFER9860</APPNAMEUC>
     <AUTHOR>Andreas B.</AUTHOR>
-    <CFLAGS></CFLAGS>
+    <CFLAGS/>
     <EMAIL>andreas@nitrobox</EMAIL>
     <LICENSE>GPL</LICENSE>
     <LICENSEFILE>COPYING</LICENSEFILE>
@@ -122,4 +140,56 @@
     <YEAR>2007</YEAR>
     <dest>/home/andreas/text/doc/CASIO/code/xfer9860/xfer9860</dest>
   </substmap>
+  <cppsupportpart>
+    <filetemplates>
+      <interfacesuffix>.h</interfacesuffix>
+      <implementationsuffix>.cpp</implementationsuffix>
+    </filetemplates>
+  </cppsupportpart>
+  <kdevcppsupport>
+    <qt>
+      <used>false</used>
+      <version>3</version>
+      <root>/usr/qt/3</root>
+    </qt>
+    <codecompletion>
+      <includeGlobalFunctions>true</includeGlobalFunctions>
+      <includeTypes>true</includeTypes>
+      <includeEnums>true</includeEnums>
+      <includeTypedefs>false</includeTypedefs>
+      <automaticCodeCompletion>true</automaticCodeCompletion>
+      <automaticArgumentsHint>true</automaticArgumentsHint>
+      <automaticHeaderCompletion>true</automaticHeaderCompletion>
+      <codeCompletionDelay>250</codeCompletionDelay>
+      <argumentsHintDelay>400</argumentsHintDelay>
+      <headerCompletionDelay>250</headerCompletionDelay>
+    </codecompletion>
+    <creategettersetter>
+      <prefixGet/>
+      <prefixSet>set</prefixSet>
+      <prefixVariable>m_,_</prefixVariable>
+      <parameterName>theValue</parameterName>
+      <inlineGet>true</inlineGet>
+      <inlineSet>true</inlineSet>
+    </creategettersetter>
+    <references/>
+  </kdevcppsupport>
+  <kdevdebugger>
+    <general>
+      <programargs/>
+      <gdbpath/>
+      <dbgshell/>
+      <configGdbScript/>
+      <runShellScript/>
+      <runGdbScript/>
+      <breakonloadinglibs>true</breakonloadinglibs>
+      <separatetty>false</separatetty>
+      <floatingtoolbar>false</floatingtoolbar>
+    </general>
+    <display>
+      <staticmembers>false</staticmembers>
+      <demanglenames>true</demanglenames>
+      <outputradix>10</outputradix>
+    </display>
+  </kdevdebugger>
 </kdevelop>
