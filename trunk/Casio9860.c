@@ -1,7 +1,7 @@
 /***************************************************************************
- *   Copyright (C) 2007													   *
- *		Manuel Naranjo <naranjo.manuel@gmail.com>						   *
- *		Andreas Bertheussen <andreasmarcel@gmail.com>					   *
+ *   Copyright (C) 2007							   *
+ *	Manuel Naranjo <naranjo.manuel@gmail.com>			   *
+ *	Andreas Bertheussen <andreasmarcel@gmail.com>			   *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -19,9 +19,9 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#include "Casio9860.h"
 #include <stdio.h>
 #include <usb.h>
+#include "Casio9860.h"
 
 struct usb_device *device_init(void) {
 	struct usb_bus *usb_bus;
