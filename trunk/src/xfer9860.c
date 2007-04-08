@@ -30,25 +30,35 @@
 #include <stdlib.h>
 #include <string.h>
 #include "Casio9860.h"
+#include <usb.h>
 
 int main(int argc, char *argv[]) {
+	int retval = 0;
 	if (argc < 2) {
-		printf("Upload a file to the fx-9860 by USB\nUsage: %s <filename>\n");
+		printf("Upload a file to the fx-9860 by USB\nUsage: %s <filename>\n", argv[0]);
+		return 0;
+	}
+	FILE *source = fopen(argv[1], "r");
+	if (source == NULL) {
+		printf("Cannot open file\n");
 		return 0;
 	}
 
 
+	fclose(source);
 
 	struct usb_device *usb_dev;
 	struct usb_dev_handle *usb_handle;
 
-	usb_dev = device_init();
+	usb_dev = (struct usb_device*)device_init();
 	if (usb_dev == NULL) {
-		fprintf(stderr, "The calculator does not seem to be connected\n");
+		fprintf(stderr,
+				"The calculator does not seem to be connected,\n"
+				"- make sure it is set to receive; press [menu], [D], [F2]\n");
 		goto exit;
 	}
 
-	usb_handle = usb_open(usb_dev);
+	usb_handle = (struct usb_dev_handle*)usb_open(usb_dev);
 	if (usb_handle == NULL) {
 		fprintf(stderr, "Unable to open the USB device\n");
 		goto exit_close;
