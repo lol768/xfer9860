@@ -24,8 +24,6 @@
 #define C9860_VENDOR_ID   0x07CF
 #define C9860_PRODUCT_ID  0x6101
 
-#include <usb.h>
-
 /*	Function declarations	*/
 int init_9860(usb_dev_handle* usb_handle);
 struct usb_device *device_init(void);

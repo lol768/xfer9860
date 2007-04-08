@@ -20,9 +20,9 @@
  ***************************************************************************/
 
 #include <stdio.h>
-#include <stdlib.h>
 #include <usb.h>
 #include "Casio9860.h"
+
 
 struct usb_device *device_init(void) {
 	struct usb_bus *usb_bus;
