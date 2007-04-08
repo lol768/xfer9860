@@ -1,6 +1,7 @@
 /***************************************************************************
- *   Copyright (C) 2007													   *
- *		Andreas Bertheussen <andreasmarcel@gmail.com>					   *
+ *   Copyright (C) 2007							   *
+ *	Manuel Naranjo <naranjo.manuel@gmail.com>			   *
+ *	Andreas Bertheussen <andreasmarcel@gmail.com>			   *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -28,7 +29,7 @@
 
 /*	Function declarations	*/
 
-int init_9860(usb_dev_handle* usb_handle);
+int init_9860(usb_dev_handle*);
 struct usb_device *device_init(void);
 
 

@@ -1,9 +1,9 @@
 /***************************************************************************
- *   Copyright (C) 2007													   *
- *		Manuel Naranjo <naranjo.manuel@gmail.com>						   *
- *		Andreas Bertheussen <andreasmarcel@gmail.com>					   *
- *   Copyright (C) 2004													   *
- *		Greg Kroah-Hartman <greg@kroah.com>								   *
+ *   Copyright (C) 2007							   *
+ *	Manuel Naranjo <naranjo.manuel@gmail.com>			   *
+ *	Andreas Bertheussen <andreasmarcel@gmail.com>			   *
+ *   Copyright (C) 2004							   *
+ *	Greg Kroah-Hartman <greg@kroah.com>				   *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -21,10 +21,11 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
+
+#include "Casio9860.h"
 
 #include <usb.h>
 #include <stdio.h>
@@ -32,7 +33,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include "Casio9860.h"
+
 
 int main(int argc, char *argv[]) {
 	int retval = 0;
