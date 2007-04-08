@@ -19,10 +19,9 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
+#include "Casio9860.h"
 #include <stdio.h>
 #include <usb.h>
-#include "Casio9860.h"
-
 
 struct usb_device *device_init(void) {
 	struct usb_bus *usb_bus;
