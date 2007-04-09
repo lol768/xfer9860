@@ -104,15 +104,16 @@ int main(int argc, char *argv[]) {
 		goto exit;
 	}
 	printf("[I] Found file: %s\n", argv[1]);
-	
+	printf("[I] Connecting to fx-9860...\n");
+
 	struct usb_device *usb_dev;
 	struct usb_dev_handle *usb_handle;
 
 	usb_dev = (struct usb_device*)device_init();
 	if (usb_dev == NULL) {
 		fprintf(stderr,
-				"[E] The calculator does not seem to be connected,\n"
-				"    To make sure it is set to receive; press [menu], [D], [F2]\n");
+				"[E] The calculator cannot be found,\n"
+				"    Make sure it is connected; press [ON], [MENU], [sin], [F2]\n");
 		goto exit;
 	}
 
@@ -136,7 +137,6 @@ int main(int argc, char *argv[]) {
 
 	/*
 	 * TODO:
-	 *	Do connection verification
 	 *	Check free space on device and alert user if too small
 	 *	Transfer file
 	 */
@@ -144,11 +144,11 @@ int main(int argc, char *argv[]) {
 	// ================
 	buffer = calloc(0x40, sizeof(char));
 	
-	buffer[0] =0x05; buffer[1]=0x30; buffer[2]=0x30; buffer[3]=0x30; buffer[4]=0x37; buffer[5]=0x30;  
-	ret = WriteUSB(usb_handle, buffer, 6);	// from usbio.c
+	buffer[0]=0x05; buffer[1]=0x30; buffer[2]=0x30; buffer[3]=0x30; buffer[4]=0x37; buffer[5]=0x30;
+	ret = WriteUSB(usb_handle, buffer, 6);
 	debug(0, buffer, ret);
 	
-	ret = ReadUSB(usb_handle, buffer, 6); // from usbio.c, stops here..
+	ret = ReadUSB(usb_handle, buffer, 6);
 	debug(1, buffer, ret);
 	
 	// ====================
@@ -157,6 +157,7 @@ int main(int argc, char *argv[]) {
 	exit_close:
 		usb_close(usb_handle);
 		free(usb_dev);
+		free(buffer);
 	exit:
 
 	
