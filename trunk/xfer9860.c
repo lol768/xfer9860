@@ -28,6 +28,9 @@
 #include <stdio.h>
 #include <string.h>
 
+/* Macro for nulling freed pointers */
+#define FREE(p)   do { free(p); (p) = NULL; } while(0)
+
 #define __DUMP__
 #define LEN_LINE 16
 #define VERIFICATION_ATTEMPTS 3
@@ -198,7 +201,7 @@ int main(int argc, char *argv[]) {
 		temp = memcpy(temp, buffer+12, 8);
 		printf("[I]  Free space in RAM: %i bytes\n", strtol(temp, NULL, 16));
 		/* TODO: compare free space with filesize, possibly store free space somewhere neat */
-		free(temp);
+		FREE(temp);
 	} else {
 		printf("[E] Did not receive acknowledgement.\n");
 		goto exit;
@@ -220,8 +223,8 @@ int main(int argc, char *argv[]) {
 		usb_release_interface(usb_handle, 0);
 	exit_close:
 		usb_close(usb_handle);
-		free(usb_dev);
-		free(buffer);
+		FREE(usb_dev);
+		FREE(buffer);
 	exit:
 
 	
