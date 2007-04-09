@@ -1,4 +1,6 @@
 /***************************************************************************
+ *   xfer9860 - Transfer files between a Casio fx-9860G and computer	   *
+ *									   *
  *   Copyright (C) 2007							   *
  *	Manuel Naranjo <naranjo.manuel@gmail.com>			   *
  *	Andreas Bertheussen <andreasmarcel@gmail.com>			   *
