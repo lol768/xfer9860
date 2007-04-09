@@ -45,7 +45,7 @@ struct usb_device *device_init(void) {
 int init_9860(struct usb_dev_handle *usb_handle) {
 	int retval;
 	char* buffer;
-	buffer = calloc(0x12, sizeof(char));
+	buffer = calloc(0x29, sizeof(char));
 
 	retval = usb_control_msg(usb_handle, 0x80, 0x6, 0x100, 0, buffer, 0x12, 200);
 	debug(1, buffer, retval);
@@ -55,8 +55,6 @@ int init_9860(struct usb_dev_handle *usb_handle) {
 		return retval;
 	}
 
-	buffer = (char *)realloc(buffer, (size_t) (0x29 * sizeof(char)));
-
 	retval = usb_control_msg(usb_handle, 0x80, 0x6, 0x200, 0, buffer, 0x29, 250);
 	debug(1, buffer, retval);
 	
@@ -64,8 +62,6 @@ int init_9860(struct usb_dev_handle *usb_handle) {
 		fprintf(stderr, "Unable to send second message\n");
 		return retval;
 	}
-
-	buffer = (char *)realloc(buffer, (size_t) (0x1 * sizeof(char)));
 
 	retval = usb_control_msg(usb_handle, 0x41, 0x1, 0x0, 0, buffer, 0x0, 250);
 	debug(1, buffer, retval);
