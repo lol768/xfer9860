@@ -30,6 +30,7 @@
 
 #define __DUMP__
 #define LEN_LINE 16
+#define VERIFICATION_ATTEMPTS 3
 
 void debug(int input, char* array, int len){
 #ifdef __DEBUG__
@@ -112,7 +113,7 @@ int main(int argc, char *argv[]) {
 	usb_dev = (struct usb_device*)device_init();
 	if (usb_dev == NULL) {
 		fprintf(stderr,
-				"[E] The calculator cannot be found,\n"
+				"[E] The device cannot be found,\n"
 				"    Make sure it is connected; press [ON], [MENU], [sin], [F2]\n");
 		goto exit;
 	}
@@ -143,14 +144,27 @@ int main(int argc, char *argv[]) {
 	
 	// ================
 	buffer = calloc(0x40, sizeof(char));
+	if (buffer == NULL) {
+		printf("[E] Out of memory\n");
+		goto exit;
+	}
 	
-	buffer[0]=0x05; buffer[1]=0x30; buffer[2]=0x30; buffer[3]=0x30; buffer[4]=0x37; buffer[5]=0x30;
-	ret = WriteUSB(usb_handle, buffer, 6);
-	debug(0, buffer, ret);
-	
-	ret = ReadUSB(usb_handle, buffer, 6);
-	debug(1, buffer, ret);
-	
+	int i;
+	for(i = 1; i <= VERIFICATION_ATTEMPTS; i++) {
+		printf("[>] Verifying device, attempt %i..\n", i);
+		memcpy(buffer, "\x05\x30\x30\x30\x37\x30", 6);
+		ret = WriteUSB(usb_handle, buffer, 6);
+		debug(0, buffer, ret);
+		
+		ret = ReadUSB(usb_handle, buffer, 6);
+		debug(1, buffer, ret);
+		if (buffer[0] == 0x06) {
+			printf("[I] Got verification response\n");
+			break;
+		} else {
+			/* Pause here, will try verification again */
+		}
+	}
 	// ====================
 	exit_unclaim:
 		usb_release_interface(usb_handle, 0);
