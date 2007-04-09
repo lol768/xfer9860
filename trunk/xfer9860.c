@@ -27,6 +27,9 @@
 #include <usb.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 /* Macro for nulling freed pointers */
 #define FREE(p)   do { free(p); (p) = NULL; } while(0)
@@ -42,8 +45,8 @@ void debug(int input, char* array, int len){
 	int i;
 	unsigned char temp;
 	int j, line = 0;
-	
-	
+
+
 	if (input==0)
 		fprintf(stderr, ">> ");
 	else
@@ -61,7 +64,7 @@ void debug(int input, char* array, int len){
 				else
 					fprintf(stderr, ".");
 			}
-			
+
 			line = i;
 			fprintf(stderr,"\n");
 			if (input==0)
@@ -73,7 +76,7 @@ void debug(int input, char* array, int len){
 		fprintf(stderr,"%02X ", temp);
 		
 	}
-	
+
 	if (i % LEN_LINE != 0)	
 		for (j = 0 ; j < (int)(LEN_LINE-(i % LEN_LINE)); j++)
 			fprintf(stderr,"   ");
@@ -86,13 +89,10 @@ void debug(int input, char* array, int len){
 		else
 			fprintf(stderr, ".");			
 	}
-	
+
 	fprintf(stderr,"\n\n");
 #endif //__DUMP__
 }
-
-
-
 
 int main(int argc, char *argv[]) {
 	int ret = 1;
@@ -100,17 +100,23 @@ int main(int argc, char *argv[]) {
 	char *temp;
 
 	if (argc < 2) {
-		printf("Upload a file to the fx-9860 by USB\nUsage:\t%s <filename>\n", argv[0]);
+		printf(	"Upload a file to the fx-9860 by USB\n"
+			"Usage:\t%s <filename>\n", argv[0]);
 		return 0;
 	}
 	FILE *sourcefile = fopen(argv[1], "r");
 	if (sourcefile == NULL) {
-		printf("Unable to open file: %s\n", argv[1]);
+		printf("[E] Unable to open file: %s\n", argv[1]);
 		goto exit;
 	}
-	printf("[I]  Found file: %s\n", argv[1]);
-	printf("[>] Opening connection...\n");
 
+	struct stat file_status;
+	stat(argv[1], &file_status);	// gets filesize
+
+	printf(	"[I]  Found file: %s\n"
+		"     Filesize:   %i byte(s)\n", argv[1], file_status.st_size);
+	
+	printf("[>] Opening connection...\n");
 	struct usb_device *usb_dev;
 	struct usb_dev_handle *usb_handle;
 
@@ -139,7 +145,8 @@ int main(int argc, char *argv[]) {
 		fprintf(stderr, "[E] Couldn't initialize connection. Exiting.\n");
 		goto exit_unclaim;
 	}
-	printf("[I] Connected.\n");
+	printf("[I]  Connected.\n");
+	
 	/*
 	 * TODO:
 	 *	Check free space on device and alert user if too small
@@ -149,7 +156,7 @@ int main(int argc, char *argv[]) {
 	// ================
 	buffer = (char*)calloc(0x40, sizeof(char));
 	if (buffer == NULL) {
-		printf("[E] Out of memory\n");
+		printf("[E] Out of memory. Exiting.\n");
 		goto exit;
 	}
 	
@@ -163,7 +170,7 @@ int main(int argc, char *argv[]) {
 		ret = ReadUSB(usb_handle, buffer, 6);
 		debug(1, buffer, ret);
 		if (buffer[0] == 0x06) {
-			printf("[I]  Got verification response\n");
+			printf("[I]  Got verification response.\n");
 			break;
 		} else {
 			/* Pause here, will try verification again */
@@ -184,7 +191,7 @@ int main(int argc, char *argv[]) {
 	ret = ReadUSB(usb_handle, buffer, 6);
 	debug(1, buffer, ret);
 	if(buffer[0] != 0x06) {
-		printf("[E] Error requesting capacity information.\n");
+		printf("[E] Error requesting capacity information. Exiting.\n");
 		goto exit;
 	}
 	/* change direction */
@@ -195,29 +202,27 @@ int main(int argc, char *argv[]) {
 	/* expect free space transmission and ack */
 	ret = ReadUSB(usb_handle, buffer, 0x22);
 	debug(1, buffer, ret);
-	
 	if (buffer[0] == 0x01) {	// rough check, needs improvement
 		temp = (char*)calloc(8, sizeof(char));
 		temp = memcpy(temp, buffer+12, 8);
-		printf("[I]  Free space in RAM: %i bytes\n", strtol(temp, NULL, 16));
+		printf("[I]  Free space in RAM: %i byte(s).\n", strtol(temp, NULL, 16));
 		/* TODO: compare free space with filesize, possibly store free space somewhere neat */
 		FREE(temp);
 	} else {
-		printf("[E] Did not receive acknowledgement.\n");
+		printf("[E] Did not receive acknowledgement. Exiting.\n");
 		goto exit;
 	}
 	
 	memcpy(buffer, "\x06\x30\x30\x30\x37\x30", 6);
 	ret = WriteUSB(usb_handle, buffer, 6);
 	debug(0, buffer, ret);
-	
-	
 
-	/* end of communication */
+
+	/* end communication */
 	memcpy(buffer, "\x18\x30\x31\x30\x36\x46", 6);
 	ret = WriteUSB(usb_handle, buffer, 6);
 	debug(0, buffer, ret);
-	
+
 	// ====================
 	exit_unclaim:
 		usb_release_interface(usb_handle, 0);
@@ -227,6 +232,5 @@ int main(int argc, char *argv[]) {
 		FREE(buffer);
 	exit:
 
-	
 	return 0;
 }
