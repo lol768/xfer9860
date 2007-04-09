@@ -94,6 +94,7 @@ void debug(int input, char* array, int len){
 int main(int argc, char *argv[]) {
 	int ret = 1;
 	char *buffer;
+	char *temp;
 
 	if (argc < 2) {
 		printf("Upload a file to the fx-9860 by USB\nUsage:\t%s <filename>\n", argv[0]);
@@ -104,8 +105,8 @@ int main(int argc, char *argv[]) {
 		printf("Unable to open file: %s\n", argv[1]);
 		goto exit;
 	}
-	printf("[I] Found file: %s\n", argv[1]);
-	printf("[I] Connecting to fx-9860...\n");
+	printf("[I]  Found file: %s\n", argv[1]);
+	printf("[>] Opening connection...\n");
 
 	struct usb_device *usb_dev;
 	struct usb_dev_handle *usb_handle;
@@ -135,7 +136,7 @@ int main(int argc, char *argv[]) {
 		fprintf(stderr, "[E] Couldn't initialize connection. Exiting.\n");
 		goto exit_unclaim;
 	}
-
+	printf("[I] Connected.\n");
 	/*
 	 * TODO:
 	 *	Check free space on device and alert user if too small
@@ -143,7 +144,7 @@ int main(int argc, char *argv[]) {
 	 */
 	
 	// ================
-	buffer = calloc(0x40, sizeof(char));
+	buffer = (char*)calloc(0x40, sizeof(char));
 	if (buffer == NULL) {
 		printf("[E] Out of memory\n");
 		goto exit;
@@ -159,12 +160,61 @@ int main(int argc, char *argv[]) {
 		ret = ReadUSB(usb_handle, buffer, 6);
 		debug(1, buffer, ret);
 		if (buffer[0] == 0x06) {
-			printf("[I] Got verification response\n");
+			printf("[I]  Got verification response\n");
 			break;
 		} else {
 			/* Pause here, will try verification again */
 		}
 	}
+	
+	/*
+	 * Request free RAM space transmission
+	 * this will only check ram capacity, as we lack documentation and logs to check
+	 * flash capacity, which is what we need here.. It is basically the same, just with
+	 * another subtype and another offset for the returned size.
+	 */
+	printf("[>] Getting RAM capacity information...\n");
+	memcpy(buffer, "\x01\x32\x42\x30\x35\x43", 6);
+	ret = WriteUSB(usb_handle, buffer, 6);
+	debug(0, buffer, ret);
+	
+	ret = ReadUSB(usb_handle, buffer, 6);
+	debug(1, buffer, ret);
+	if(buffer[0] != 0x06) {
+		printf("[E] Error requesting capacity information.\n");
+		goto exit;
+	}
+	/* change direction */
+	memcpy(buffer, "\x03\x30\x30\x30\x37\x30", 6);
+	ret = WriteUSB(usb_handle, buffer, 6);
+	debug(0, buffer, ret);
+	
+	/* expect free space transmission and ack */
+	ret = ReadUSB(usb_handle, buffer, 0x22);
+	debug(1, buffer, ret);
+	
+	if (buffer[0] == 0x01) {	// rough check, needs improvement
+		temp = (char*)calloc(8, sizeof(char));
+		temp = memcpy(temp, buffer+12, 8);
+		printf("[I]  Free space in RAM: %i bytes\n", strtol(temp, NULL, 16));
+		/* TODO: compare free space with filesize, possibly store free space somewhere neat */
+		free(temp);
+	} else {
+		printf("[E] Did not receive acknowledgement.\n");
+		goto exit;
+	}
+	
+	memcpy(buffer, "\x06\x30\x30\x30\x37\x30", 6);
+	ret = WriteUSB(usb_handle, buffer, 6);
+	debug(0, buffer, ret);
+	
+	
+
+	/* end of communication */
+	memcpy(buffer, "\x18\x30\x31\x30\x36\x46", 6);
+	ret = WriteUSB(usb_handle, buffer, 6);
+	debug(0, buffer, ret);
+	
 	// ====================
 	exit_unclaim:
 		usb_release_interface(usb_handle, 0);
