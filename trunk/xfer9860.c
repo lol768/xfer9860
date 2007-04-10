@@ -1,4 +1,6 @@
 /***************************************************************************
+ *   xfer9860 - Transfer files between a Casio fx-9860G and computer	   *
+ *									   *
  *   Copyright (C) 2007							   *
  *	Manuel Naranjo <naranjo.manuel@gmail.com>			   *
  *	Andreas Bertheussen <andreasmarcel@gmail.com>			   *
@@ -36,21 +38,17 @@
 
 #define __DUMP__
 #define LEN_LINE 16
-#define VERIFICATION_ATTEMPTS 3
+#define MAX_VERIFICATION_ATTEMPTS 3
 
 void debug(int input, char* array, int len){
 #ifdef __DEBUG__
 #endif //__DEBUG__
 #ifdef __DUMP__
-	int i;
 	unsigned char temp;
-	int j, line = 0;
+	int i, j, line = 0;
 
-
-	if (input==0)
-		fprintf(stderr, ">> ");
-	else
-		fprintf(stderr, "<< ");
+	if (input) { fprintf(stderr, "<< "); }
+	else { fprintf(stderr, ">> "); }
 	
 	for (i = 0 ; i < len ; i++){
 		temp = (unsigned char) array[i];
@@ -59,22 +57,17 @@ void debug(int input, char* array, int len){
 			fprintf(stderr, "\t");
 			for (j = line; j < line + LEN_LINE; j++){
 				char u = (unsigned char) array[j];
-				if (u > 31)
-					fprintf(stderr, "%c", u);
-				else
-					fprintf(stderr, ".");
+				if (u > 31) { fprintf(stderr, "%c", u); }
+				else { fprintf(stderr, "."); }
 			}
 
 			line = i;
 			fprintf(stderr,"\n");
-			if (input==0)
-				fprintf(stderr, ">> ");
-			else
-				fprintf(stderr, "<< ");			
+			if (input) { fprintf(stderr, "<< "); }
+			else { fprintf(stderr, ">> "); }
 		}
 		
 		fprintf(stderr,"%02X ", temp);
-		
 	}
 
 	if (i % LEN_LINE != 0)	
@@ -96,8 +89,7 @@ void debug(int input, char* array, int len){
 
 int main(int argc, char *argv[]) {
 	int ret = 1;
-	char *buffer;
-	char *temp;
+	char *buffer, *temp;
 
 	if (argc < 2) {
 		printf(	"Upload a file to the fx-9860 by USB\n"
@@ -122,8 +114,7 @@ int main(int argc, char *argv[]) {
 
 	usb_dev = (struct usb_device*)device_init();
 	if (usb_dev == NULL) {
-		fprintf(stderr,
-				"[E] The device cannot be found,\n"
+		fprintf(stderr,	"[E] The device cannot be found,\n"
 				"    Make sure it is connected; press [ON], [MENU], [sin], [F2]\n");
 		goto exit;
 	}
@@ -161,19 +152,23 @@ int main(int argc, char *argv[]) {
 	}
 	
 	int i;
-	for(i = 1; i <= VERIFICATION_ATTEMPTS; i++) {
-		printf("[>] Verifying device, attempt %i..\n", i);
+	for(i = 1; i <= MAX_VERIFICATION_ATTEMPTS; i++) {
+		printf("[>] Verifying device, attempt %i...\n", i);
 		memcpy(buffer, "\x05\x30\x30\x30\x37\x30", 6);
 		ret = WriteUSB(usb_handle, buffer, 6);
 		debug(0, buffer, ret);
 		
 		ret = ReadUSB(usb_handle, buffer, 6);
 		debug(1, buffer, ret);
-		if (buffer[0] == 0x06) {
+		if (buffer[0] == 0x06) {	/* lazy check */
 			printf("[I]  Got verification response.\n");
 			break;
 		} else {
-			/* Pause here, will try verification again */
+			if (i == MAX_VERIFICATION_ATTEMPTS) {
+				printf("[E] Did not receive verification response. Exiting.\n");
+				goto exit;
+			}
+			sleep(1);
 		}
 	}
 	
@@ -202,9 +197,9 @@ int main(int argc, char *argv[]) {
 	/* expect free space transmission and ack */
 	ret = ReadUSB(usb_handle, buffer, 0x22);
 	debug(1, buffer, ret);
-	if (buffer[0] == 0x01) {	// rough check, needs improvement
+	if (buffer[0] == 0x01) {	/* lazy check */
 		temp = (char*)calloc(8, sizeof(char));
-		temp = memcpy(temp, buffer+12, 8);
+		memcpy(temp, buffer+12, 8);
 		printf("[I]  Free space in RAM: %i byte(s).\n", strtol(temp, NULL, 16));
 		/* TODO: compare free space with filesize, possibly store free space somewhere neat */
 		FREE(temp);
@@ -219,6 +214,7 @@ int main(int argc, char *argv[]) {
 
 
 	/* end communication */
+	printf("[>] Closing connection.\n");
 	memcpy(buffer, "\x18\x30\x31\x30\x36\x46", 6);
 	ret = WriteUSB(usb_handle, buffer, 6);
 	debug(0, buffer, ret);
