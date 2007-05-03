@@ -25,9 +25,13 @@
 
 #include <usb.h>
 
+#define __DEBUG__
+#define LEN_LINE 16
+
 #define USB_WRITE_TIMEOUT 300
 #define USB_READ_TIMEOUT 1000
 
+void debug(int input, char* array, int len);
 int ReadUSB(struct usb_dev_handle *usb_handle, char* buffer, int length);
 int WriteUSB(struct usb_dev_handle *usb_handle, char* buffer, int length);
 

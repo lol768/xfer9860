@@ -19,15 +19,62 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
+
 #include "usbio.h"
 
 #include <stdio.h>
 #include <usb.h>
 
+void debug(int input, char* array, int len){
+#ifdef __DEBUG__
+	unsigned char temp;
+	int i, j, line = 0;
+
+	if (input) { fprintf(stderr, "<< "); }
+	else { fprintf(stderr, ">> "); }
+	
+	for (i = 0 ; i < len ; i++){
+		temp = (unsigned char) array[i];
+		
+		if (i % LEN_LINE == 0 && i != 0){
+			fprintf(stderr, "\t");
+			for (j = line; j < line + LEN_LINE; j++){
+				char u = (unsigned char) array[j];
+				if (u > 31) { fprintf(stderr, "%c", u); }
+				else { fprintf(stderr, "."); }
+			}
+
+			line = i;
+			fprintf(stderr,"\n");
+			if (input) { fprintf(stderr, "<< "); }
+			else { fprintf(stderr, ">> "); }
+		}
+		
+		fprintf(stderr,"%02X ", temp);
+	}
+
+	if (i % LEN_LINE != 0)	
+		for (j = 0 ; j < (int)(LEN_LINE-(i % LEN_LINE)); j++)
+			fprintf(stderr,"   ");
+	
+	fprintf(stderr, "\t");
+	for (j = line; j < len; j++){
+		temp = (short unsigned int) array[j];
+		if (temp > 31)
+			fprintf(stderr, "%c", temp);
+		else
+			fprintf(stderr, ".");			
+	}
+
+	fprintf(stderr,"\n\n");
+#endif //__DEBUG__
+}
+
 int ReadUSB(struct usb_dev_handle *usb_handle, char *buffer, int length) {
 	int ret = 0;
 	ret = usb_bulk_read(usb_handle, 0x82, buffer, length, USB_READ_TIMEOUT);
 	if (ret < 0) { printf("Could not read, ERROR: %i", ret); }
+	debug(1, buffer, ret);
 	return ret;
 }
 
@@ -35,5 +82,6 @@ int WriteUSB(struct usb_dev_handle *usb_handle, char *buffer, int length) {
 	int ret = 0;
 	ret = usb_bulk_write(usb_handle, 0x1, buffer, length, USB_WRITE_TIMEOUT);
 	if (ret < 0) { printf("Could not write, ERROR: %i", ret); }
+	debug(0, buffer, ret);
 	return ret;
 }
