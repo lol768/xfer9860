@@ -36,56 +36,7 @@
 /* Macro for nulling freed pointers */
 #define FREE(p)   do { free(p); (p) = NULL; } while(0)
 
-#define __DUMP__
-#define LEN_LINE 16
 #define MAX_VERIFICATION_ATTEMPTS 3
-
-void debug(int input, char* array, int len){
-#ifdef __DEBUG__
-#endif //__DEBUG__
-#ifdef __DUMP__
-	unsigned char temp;
-	int i, j, line = 0;
-
-	if (input) { fprintf(stderr, "<< "); }
-	else { fprintf(stderr, ">> "); }
-	
-	for (i = 0 ; i < len ; i++){
-		temp = (unsigned char) array[i];
-		
-		if (i % LEN_LINE == 0 && i != 0){
-			fprintf(stderr, "\t");
-			for (j = line; j < line + LEN_LINE; j++){
-				char u = (unsigned char) array[j];
-				if (u > 31) { fprintf(stderr, "%c", u); }
-				else { fprintf(stderr, "."); }
-			}
-
-			line = i;
-			fprintf(stderr,"\n");
-			if (input) { fprintf(stderr, "<< "); }
-			else { fprintf(stderr, ">> "); }
-		}
-		
-		fprintf(stderr,"%02X ", temp);
-	}
-
-	if (i % LEN_LINE != 0)	
-		for (j = 0 ; j < (int)(LEN_LINE-(i % LEN_LINE)); j++)
-			fprintf(stderr,"   ");
-	
-	fprintf(stderr, "\t");
-	for (j = line; j < len; j++){
-		temp = (short unsigned int) array[j];
-		if (temp > 31)
-			fprintf(stderr, "%c", temp);
-		else
-			fprintf(stderr, ".");			
-	}
-
-	fprintf(stderr,"\n\n");
-#endif //__DUMP__
-}
 
 int main(int argc, char *argv[]) {
 	int ret = 1;
@@ -155,11 +106,8 @@ int main(int argc, char *argv[]) {
 	for(i = 1; i <= MAX_VERIFICATION_ATTEMPTS; i++) {
 		printf("[>] Verifying device, attempt %i...\n", i);
 		memcpy(buffer, "\x05\x30\x30\x30\x37\x30", 6);
-		ret = WriteUSB(usb_handle, buffer, 6);
-		debug(0, buffer, ret);
-		
-		ret = ReadUSB(usb_handle, buffer, 6);
-		debug(1, buffer, ret);
+		WriteUSB(usb_handle, buffer, 6);
+		ReadUSB(usb_handle, buffer, 6);
 		if (buffer[0] == 0x06) {	/* lazy check */
 			printf("[I]  Got verification response.\n");
 			break;
@@ -180,23 +128,19 @@ int main(int argc, char *argv[]) {
 	 */
 	printf("[>] Getting RAM capacity information...\n");
 	memcpy(buffer, "\x01\x32\x42\x30\x35\x43", 6);
-	ret = WriteUSB(usb_handle, buffer, 6);
-	debug(0, buffer, ret);
+	WriteUSB(usb_handle, buffer, 6);
 	
-	ret = ReadUSB(usb_handle, buffer, 6);
-	debug(1, buffer, ret);
+	ReadUSB(usb_handle, buffer, 6);
 	if(buffer[0] != 0x06) {
 		printf("[E] Error requesting capacity information. Exiting.\n");
 		goto exit;
 	}
 	/* change direction */
 	memcpy(buffer, "\x03\x30\x30\x30\x37\x30", 6);
-	ret = WriteUSB(usb_handle, buffer, 6);
-	debug(0, buffer, ret);
+	WriteUSB(usb_handle, buffer, 6);
 	
 	/* expect free space transmission and ack */
-	ret = ReadUSB(usb_handle, buffer, 0x22);
-	debug(1, buffer, ret);
+	ReadUSB(usb_handle, buffer, 0x22);
 	if (buffer[0] == 0x01) {	/* lazy check */
 		temp = (char*)calloc(8, sizeof(char));
 		memcpy(temp, buffer+12, 8);
@@ -209,15 +153,12 @@ int main(int argc, char *argv[]) {
 	}
 	
 	memcpy(buffer, "\x06\x30\x30\x30\x37\x30", 6);
-	ret = WriteUSB(usb_handle, buffer, 6);
-	debug(0, buffer, ret);
-
-
+	WriteUSB(usb_handle, buffer, 6);	
+	
 	/* end communication */
 	printf("[>] Closing connection.\n");
 	memcpy(buffer, "\x18\x30\x31\x30\x36\x46", 6);
-	ret = WriteUSB(usb_handle, buffer, 6);
-	debug(0, buffer, ret);
+	WriteUSB(usb_handle, buffer, 6);
 
 	// ====================
 	exit_unclaim:
