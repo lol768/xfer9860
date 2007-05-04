@@ -23,6 +23,8 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
+#define __DEBUG__
+
 #include "usbio.h"
 #include "Casio9860.h"
 
@@ -134,10 +136,10 @@ int main(int argc, char *argv[]) {
 		printf("[E] Error requesting capacity information. Exiting.\n");
 		goto exit;
 	}
+
 	/* change direction */
-	memcpy(buffer, "\x03\x30\x30\x30\x37\x30", 6);
-	WriteUSB(usb_handle, buffer, 6);
-	
+	fx_Send_Change_Direction(usb_handle, buffer);
+
 	/* expect free space transmission and ack */
 	ReadUSB(usb_handle, buffer, 0x22);
 	if (buffer[0] == 0x01) {	/* lazy check */
@@ -162,9 +164,10 @@ int main(int argc, char *argv[]) {
 		usb_release_interface(usb_handle, 0);
 	exit_close:
 		usb_close(usb_handle);
-	exit:
 		FREE(usb_dev);
 		FREE(buffer);
+	exit:
+
 
 	return 0;
 }
