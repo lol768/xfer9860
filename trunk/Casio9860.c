@@ -25,6 +25,7 @@
 
 #include <stdio.h>
 #include <usb.h>
+#include <string.h>
 #include "Casio9860.h"
 
 struct usb_device *device_init(void) {
@@ -77,3 +78,36 @@ int init_9860(struct usb_dev_handle *usb_handle) {
 
 	return 0;
 }
+
+int fx_Send_Verify(struct usb_dev_handle *usb_handle, char *buffer) {
+	/* Type: 0x05
+	 * ST: 00 */
+	memcpy(buffer, "\x05\x30\x30\x30\x37\x30", 6);
+	WriteUSB(usb_handle, buffer, 6);
+}
+
+int fx_Send_Terminate(struct usb_dev_handle *usb_handle, char *buffer) {
+	/* Type: 0x18
+	 * ST: 01 */
+	memcpy(buffer, "\x18\x30\x31\x30\x36\x46", 6);
+	WriteUSB(usb_handle, buffer, 6);
+}
+
+int fx_Send_Positive(struct usb_dev_handle *usb_handle, char *buffer, char type) {
+	int i;
+	char sum;
+	
+	/* Type: 0x06
+	 * ST: given as argument */
+	memcpy(buffer, "\x06\x30\x30\x30", 6);
+	if (type == POSITIVE_OVERWRITE || type == POSITIVE_SYSINFO) {
+		memcpy(buffer+2, &type, 1);
+	}
+	for (i = 1; i < 4; i++) {
+		sum += buffer[i];
+	}
+	sprintf(buffer+4, "%02X", (~sum)+1);
+	WriteUSB(usb_handle, buffer, 6);
+}
+
+

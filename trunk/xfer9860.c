@@ -98,15 +98,14 @@ int main(int argc, char *argv[]) {
 	// ================
 	buffer = (char*)calloc(0x40, sizeof(char));
 	if (buffer == NULL) {
-		printf("[E] Out of memory. Exiting.\n");
+		printf("[E] Out of system memory. Exiting.\n");
 		goto exit;
 	}
-	
+
 	int i;
 	for(i = 1; i <= MAX_VERIFICATION_ATTEMPTS; i++) {
 		printf("[>] Verifying device, attempt %i...\n", i);
-		memcpy(buffer, "\x05\x30\x30\x30\x37\x30", 6);
-		WriteUSB(usb_handle, buffer, 6);
+		fx_Send_Verify(usb_handle, buffer);
 		ReadUSB(usb_handle, buffer, 6);
 		if (buffer[0] == 0x06) {	/* lazy check */
 			printf("[I]  Got verification response.\n");
@@ -151,23 +150,21 @@ int main(int argc, char *argv[]) {
 		printf("[E] Did not receive acknowledgement. Exiting.\n");
 		goto exit;
 	}
-	
-	memcpy(buffer, "\x06\x30\x30\x30\x37\x30", 6);
-	WriteUSB(usb_handle, buffer, 6);	
-	
+
+	fx_Send_Positive(usb_handle, buffer, POSITIVE_NORMAL);
+
 	/* end communication */
 	printf("[>] Closing connection.\n");
-	memcpy(buffer, "\x18\x30\x31\x30\x36\x46", 6);
-	WriteUSB(usb_handle, buffer, 6);
+	fx_Send_Terminate(usb_handle, buffer);
 
 	// ====================
 	exit_unclaim:
 		usb_release_interface(usb_handle, 0);
 	exit_close:
 		usb_close(usb_handle);
+	exit:
 		FREE(usb_dev);
 		FREE(buffer);
-	exit:
 
 	return 0;
 }

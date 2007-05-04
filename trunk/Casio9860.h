@@ -26,13 +26,18 @@
 
 #include <usb.h>
 
-#define C9860_VENDOR_ID   0x07CF
-#define C9860_PRODUCT_ID  0x6101
+#define C9860_VENDOR_ID		0x07CF
+#define C9860_PRODUCT_ID	0x6101
+
+#define POSITIVE_NORMAL		'0'
+#define POSITIVE_OVERWRITE	'1'
+#define POSITIVE_SYSINFO	'2'
 
 /*	Function declarations	*/
 
 int init_9860(usb_dev_handle*);
 struct usb_device *device_init(void);
-
-
+int fx_Send_Connver(struct usb_dev_handle*, char*);
+int fx_Send_Termination(struct usb_dev_handle*, char*);
+int fx_Send_Positive(struct usb_dev_handle*, char*, char);
 #endif
