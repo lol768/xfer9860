@@ -83,14 +83,14 @@ int fx_Send_Verify(struct usb_dev_handle *usb_handle, char *buffer) {
 	/* Type: 0x05
 	 * ST: 00 */
 	memcpy(buffer, "\x05\x30\x30\x30\x37\x30", 6);
-	WriteUSB(usb_handle, buffer, 6);
+	return WriteUSB(usb_handle, buffer, 6);
 }
 
 int fx_Send_Terminate(struct usb_dev_handle *usb_handle, char *buffer) {
 	/* Type: 0x18
 	 * ST: 01 */
 	memcpy(buffer, "\x18\x30\x31\x30\x36\x46", 6);
-	WriteUSB(usb_handle, buffer, 6);
+	return WriteUSB(usb_handle, buffer, 6);
 }
 
 int fx_Send_Positive(struct usb_dev_handle *usb_handle, char *buffer, char type) {
@@ -99,7 +99,7 @@ int fx_Send_Positive(struct usb_dev_handle *usb_handle, char *buffer, char type)
 	
 	/* Type: 0x06
 	 * ST: given as argument */
-	memcpy(buffer, "\x06\x30\x30\x30", 6);
+	memcpy(buffer, "\x06\x30\x30\x30", 4);
 	if (type == POSITIVE_OVERWRITE || type == POSITIVE_SYSINFO) {
 		memcpy(buffer+2, &type, 1);
 	}
@@ -107,7 +107,27 @@ int fx_Send_Positive(struct usb_dev_handle *usb_handle, char *buffer, char type)
 		sum += buffer[i];
 	}
 	sprintf(buffer+4, "%02X", (~sum)+1);
-	WriteUSB(usb_handle, buffer, 6);
+	return WriteUSB(usb_handle, buffer, 6);
 }
 
+int fx_Send_Negative(struct usb_dev_handle *usb_handle, char *buffer, char type) {
+	int i;
+	char sum;
+	
+	/* Type 0x05
+	 * ST: given as argument */
+	memcpy(buffer, "\x05\x30\x30\x30", 4);
+	if (type >= 0x30 || type <= 0x36) {	// between '0' and '6'
+		memcpy(buffer+2, &type, 1);
+	}
+	for (i = 1; i < 4; i++) {
+		sum += buffer[i];
+	}
+	sprintf(buffer+4, "%02X", (~sum)+1);
+	return WriteUSB(usb_handle, buffer, 6);
+}
 
+int fx_Send_Change_Direction(struct usb_dev_handle *usb_handle, char *buffer) {
+	memcpy(buffer, "\x03\x30\x30\x30\x37\x30", 6);
+	return WriteUSB(usb_handle, buffer, 6);
+}

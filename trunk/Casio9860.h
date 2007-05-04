@@ -29,15 +29,24 @@
 #define C9860_VENDOR_ID		0x07CF
 #define C9860_PRODUCT_ID	0x6101
 
+//Types (subtypes actually) used for specifying what packet does.
 #define POSITIVE_NORMAL		'0'
 #define POSITIVE_OVERWRITE	'1'
 #define POSITIVE_SYSINFO	'2'
 
-/*	Function declarations	*/
+#define NEGATIVE_NORMAL		'0'
+#define NEGATIVE_RETRANSMIT	'1'
+#define NEGATIVE_FILEEXISTS	'2'
+#define NEGATIVE_NOOVERWRITE	'3'
+#define NEGATIVE_OVERWRITEERR	'4'
+#define NEGATIVE_MEMFULL	'5'
+#define NEGATIVE_IDENTIFY	'6'
 
 int init_9860(usb_dev_handle*);
 struct usb_device *device_init(void);
-int fx_Send_Connver(struct usb_dev_handle*, char*);
-int fx_Send_Termination(struct usb_dev_handle*, char*);
+int fx_Send_Verify(struct usb_dev_handle*, char*);
+int fx_Send_Terminate(struct usb_dev_handle*, char*);
 int fx_Send_Positive(struct usb_dev_handle*, char*, char);
+int fx_Send_Negative(struct usb_dev_handle*, char*, char);
+int fx_Send_Change_Direction(struct usb_dev_handle*, char*);
 #endif
