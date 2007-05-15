@@ -49,4 +49,6 @@ int fx_Send_Terminate(struct usb_dev_handle*, char*);
 int fx_Send_Positive(struct usb_dev_handle*, char*, char);
 int fx_Send_Negative(struct usb_dev_handle*, char*, char);
 int fx_Send_Change_Direction(struct usb_dev_handle*, char*);
+int fx_Send_Flash_Capacity_Request(struct usb_dev_handle*, char*, char*);
+
 #endif
