@@ -55,7 +55,7 @@ int init_9860(struct usb_dev_handle *usb_handle) {
 	
 	if (retval < 0) {
 		fprintf(stderr, "Unable to send first message\n");
-		return retval;
+		goto exit;
 	}
 
 	retval = usb_control_msg(usb_handle, 0x80, 0x6, 0x200, 0, buffer, 0x29, 250);
@@ -63,7 +63,7 @@ int init_9860(struct usb_dev_handle *usb_handle) {
 	
 	if (retval < 0) {
 		fprintf(stderr, "Unable to send second message\n");
-		return retval;
+		goto exit;
 	}
 
 	retval = usb_control_msg(usb_handle, 0x41, 0x1, 0x0, 0, buffer, 0x0, 250);
@@ -71,12 +71,11 @@ int init_9860(struct usb_dev_handle *usb_handle) {
 	
 	if (retval < 0) {
 		fprintf(stderr, "Unable to send third message\n");
-		return retval;
+		goto exit;
 	}
-
+exit:
 	free(buffer);
-
-	return 0;
+	return retval;
 }
 
 int fx_Send_Verify(struct usb_dev_handle *usb_handle, char *buffer) {
@@ -117,7 +116,7 @@ int fx_Send_Negative(struct usb_dev_handle *usb_handle, char *buffer, char type)
 	/* Type 0x05
 	 * ST: given as argument */
 	memcpy(buffer, "\x05\x30\x30\x30", 4);
-	if (type >= 0x30 || type <= 0x36) {	// between '0' and '6'
+	if (type >= 0x30 || type <= 0x36) {	// from '0' and '6'
 		memcpy(buffer+2, &type, 1);
 	}
 	for (i = 1; i < 4; i++) {
@@ -130,4 +129,27 @@ int fx_Send_Negative(struct usb_dev_handle *usb_handle, char *buffer, char type)
 int fx_Send_Change_Direction(struct usb_dev_handle *usb_handle, char *buffer) {
 	memcpy(buffer, "\x03\x30\x30\x30\x37\x30", 6);
 	return WriteUSB(usb_handle, buffer, 6);
+}
+
+int fx_Send_Flash_Capacity_Request(struct usb_dev_handle *usb_handle, char *buffer, char *device) {
+	short int len = strlen(device);
+	memcpy(buffer, "\x01\x34\x42\x31", 4);
+	sprintf(buffer+4, "%04X", 24+len);
+	memcpy(buffer+8, "000000000000", 12);
+		sprintf(buffer+20, "00000000%02X00", len);
+	memcpy(buffer+32, device, len);
+	
+	fx_Append_Checksum(buffer, 32+len);
+	
+	return WriteUSB(usb_handle, buffer, 34+len);
+}
+
+int fx_Append_Checksum(char *buffer, int length) {
+	int i;
+	char sum = 0x00;
+	for (i = 1; i < length; i++) {
+		sum += *(buffer+i);
+	}
+	sprintf(buffer+length, "%2X", ((~sum)+1) & 0xFF);
+	return 0;
 }
