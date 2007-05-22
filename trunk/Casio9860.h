@@ -42,13 +42,24 @@
 #define NEGATIVE_MEMFULL	'5'
 #define NEGATIVE_IDENTIFY	'6'
 
+#define ST_FILE_TO_FLASH	"\x34\x35"
+
 int init_9860(usb_dev_handle*);
 struct usb_device *device_init(void);
+
+// Communication functions
+int fx_Send_Complete(struct usb_dev_handle*, char*);
 int fx_Send_Verify(struct usb_dev_handle*, char*);
 int fx_Send_Terminate(struct usb_dev_handle*, char*);
 int fx_Send_Positive(struct usb_dev_handle*, char*, char);
 int fx_Send_Negative(struct usb_dev_handle*, char*, char);
 int fx_Send_Change_Direction(struct usb_dev_handle*, char*);
 int fx_Send_Flash_Capacity_Request(struct usb_dev_handle*, char*, char*);
+int fx_Send_File_to_Flash(struct usb_dev_handle*, char *, int, char *, char *);
 
+int fx_Send_Data(struct usb_dev_handle*, char*, char*, int, int, char*, int);
+
+// Service functions
+int fx_Append_Checksum(char*, int);
+int fx_Escape_Specialbytes(char*, char*, int);
 #endif
