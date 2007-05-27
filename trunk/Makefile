@@ -2,7 +2,7 @@ OBJECTS=xfer9860.o Casio9860.o usbio.o
 OPT=
 
 xfer9860: Casio9860.o xfer9860.o usbio.o usbio.h
-	cc ${OBJECTS} -o xfer9860 -lusb ${OPT}
+	cc ${OBJECTS} -o xfer9860 -lusb -lm ${OPT}
 Casio9860.o: Casio9860.c Casio9860.h
 	cc -c Casio9860.c -o Casio9860.o ${OPT}
 xfer9860.o: xfer9860.c Casio9860.h usbio.o usbio.h
