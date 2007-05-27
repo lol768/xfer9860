@@ -49,7 +49,7 @@ struct usb_device *device_init(void);
 
 // Communication functions
 int fx_Send_Complete(struct usb_dev_handle*, char*);
-int fx_Send_Verify(struct usb_dev_handle*, char*);
+int fx_Send_Verify(struct usb_dev_handle*, char*, char*);
 int fx_Send_Terminate(struct usb_dev_handle*, char*);
 int fx_Send_Positive(struct usb_dev_handle*, char*, char);
 int fx_Send_Negative(struct usb_dev_handle*, char*, char);

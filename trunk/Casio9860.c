@@ -81,10 +81,14 @@ int fx_Send_Complete(struct usb_dev_handle *usb_handle, char *buffer) {
 	return WriteUSB(usb_handle, buffer, 6);
 }
 
-int fx_Send_Verify(struct usb_dev_handle *usb_handle, char *buffer) {
+int fx_Send_Verify(struct usb_dev_handle *usb_handle, char *buffer, char *type) {
 	/* Type: 0x05
-	 * ST: 00 */
-	memcpy(buffer, "\x05\x30\x30\x30\x37\x30", 6);
+	 * ST: 00 or 01*/
+	memcpy(buffer, "\x05\x30\x30\x30", 6);
+	if (type[1] == '1') {
+		memcpy(buffer+2, "\x31", 1);
+	}
+	fx_Append_Checksum(buffer, 4);
 	return WriteUSB(usb_handle, buffer, 6);
 }
 
@@ -147,7 +151,7 @@ int fx_Send_File_to_Flash(struct usb_dev_handle *usb_handle, char *buffer, int f
 	short int devsize = strlen(device);
 	memcpy(buffer, "\x01\x34\x35\x31", 4); /* T, ST, DF */
 	sprintf(buffer+4, "%04X", 24+fnsize+devsize);
-	memcpy(buffer+8, "0080", 4); /* OW, DT */
+	memcpy(buffer+8, "0280", 4); /* OW, DT */
 	sprintf(buffer+12, "%08X", filesize); /* FS   8 byte*/
 	sprintf(buffer+20, "00%02X0000%02X00", fnsize, devsize); /* DS1 - DS6 (12b)*/
 	sprintf(buffer+32, "%s%s", filename, device);
@@ -185,11 +189,12 @@ int fx_Escape_Specialbytes(char *source, char *dest, int length) {
 	while(i < length) {
 		// replacement filter
 		switch (source[i]) {
-			case 0x0A:	source[i] = 0x0D;
+			case 0x0A:	source[i] = 0x0D; break;		// replace LF with CR
+			case 0x5C:	source[i+1] = 0x5C; j++; break;	// \ escapes itself
 			default:	break;
 		}
 		// note - 0x20 = 32
-		if (((short int)source[i] & 0xFF) < 0x20) {
+		if ((source[i] /*& 0xFF*/) < 0x20) {
 			dest[j] = 0x5C;
 			dest[j+1] = 0x20+source[i];
 			j++;

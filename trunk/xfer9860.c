@@ -46,12 +46,12 @@
 
 int main(int argc, char *argv[]) {
 	int ret = 1, errorcount;
-	char *buffer, *temp;
+	char *buffer, *temp, *fdata, *sdata;
 	long int freespace = 0;
 	
 	if (argc < 3) {
 		printf(	"Upload a file to the fx-9860 by USB\n"
-			"Usage:\t%s <source> <destination>\n", argv[0]);
+			"Usage:\t%s <sourcefile> <filename.txt>\n", argv[0]);
 		return 0;
 	}
 	FILE *sourcefile = fopen(argv[1], "rb");
@@ -61,18 +61,17 @@ int main(int argc, char *argv[]) {
 	}
 	short int destlen = strlen(argv[2]);
 	
-	/* Filename-check, not needed for now..
-	if (destlen > 12 || strncasecmp(argv[2]+(destlen-4), ".g1a", 4) != 0) {
-		printf("[E] Invalid destination. Should be 8 characters with a \".G1A\" extension.\n");
+	// filename-check, the limits are as of now, 8 characters + dot + 3 character extension = 12
+	/*if (destlen > 12 || strncasecmp(argv[2]+(destlen-4), ".txt", 4) != 0) {
+		printf("[E] Invalid destination. Should be 8 characters with correct extension.\n");
 		return 1;
-	}
-	*/
+	}*/
+	
 	struct stat file_status;
 	stat(argv[1], &file_status);	// gets filesize
 
 	printf(	"[I]  Found file: %s\n"
 		"     Filesize:   %i byte(s)\n", argv[1], file_status.st_size);
-	
 	printf("[>] Opening connection...\n");
 	struct usb_device *usb_dev;
 	struct usb_dev_handle *usb_handle;
@@ -112,7 +111,7 @@ int main(int argc, char *argv[]) {
 	int i;
 	for(i = 1; i <= MAX_RESEND_ATTEMPTS; i++) {
 		printf("[>] Verifying device, attempt %i...\n", i);
-		fx_Send_Verify(usb_handle, buffer);
+		fx_Send_Verify(usb_handle, buffer, "00");
 		ReadUSB(usb_handle, buffer, 6);
 		if (buffer[0] == 0x06) {	/* lazy check */
 			printf("[I]  Got verification response.\n");
@@ -158,8 +157,6 @@ int main(int argc, char *argv[]) {
 	ReadUSB(usb_handle, buffer, 6);
 	
 	// Preparing data for transfer
-	char *fdata;
-	char *sdata;
 	fdata = calloc(file_status.st_size, sizeof(char)); /* to contain the file data */
 	sdata = calloc(file_status.st_size*2, sizeof(char)); /* to contain expanded data */
 	
@@ -170,15 +167,16 @@ int main(int argc, char *argv[]) {
 	
 	// Required, because the calc can't handle bytel
 	int expandedbytes = fx_Escape_Specialbytes(fdata, sdata, file_status.st_size);
+	FREE(fdata);
 	int numpackets = (int)ceilf(expandedbytes/MAX_DATA_SIZE)+1;
-	
+
 	printf(	"[>] Initiating transfer of %s to fls0, %i b per packet:\n"
 		"    %i bytes (%i bytes), %i packet(s).\n", argv[2], MAX_DATA_SIZE, file_status.st_size, expandedbytes, numpackets);
 	fx_Send_File_to_Flash(usb_handle, buffer, file_status.st_size, argv[2], "fls0");
 	ReadUSB(usb_handle, buffer, 6);
 	if (!memcmp(buffer, "\x15\x30\x32\x30\x36\x45", 6)) {
 		printf("[E] The file %s already exists. Exiting.\n", argv[2]);
-		goto exit;
+		goto exit_unalloc;
 	}
 
 	for (i = 0; i < numpackets; i++) {
@@ -190,30 +188,37 @@ int main(int argc, char *argv[]) {
 			printf("SENDING: index:%i , dataoffset:%i , length:%i\n", i+1, i*MAX_DATA_SIZE, MAX_DATA_SIZE);
 			ret = fx_Send_Data(usb_handle, buffer, ST_FILE_TO_FLASH, numpackets, i+1, sdata+(i*MAX_DATA_SIZE), MAX_DATA_SIZE);
 		}
+		
 		printf("SENT %i BYTES, %i BYTES OF DATA\n", ret, ret-18);
-		while(ReadUSB(usb_handle, buffer, 6) == 0) {
-			if (errorcount = MAX_RESEND_ATTEMPTS) {
-				errorcount = 0;
-				printf("[E] Got no response, resending...\n");
-				goto resend_data;
-			}
-			printf("\n[E] GOT ZERO BYTES, retrying..\n");
-			usleep(1000*1000);
-			errorcount++;
+		
+		/*while(ReadUSB(usb_handle, buffer, 6) == 0) {
+			printf("[E] Got no response...\n");
+			sleep(2);
+			printf("    Resending packet.\n");
+			goto resend_data;
+		}*/
+		sleep(1);
+		if (ReadUSB(usb_handle, buffer, 6) == 0) {
+		printf("Resending\n");
+			goto resend_data;
+		}
+		if (memcmp(buffer, "\x15\x30\x31", 3) == 0) { //retransmission request
+			printf("\nGOT RETRANSMISSION REQUEST...\n");
+
+		}
+		if (memcmp(buffer, "\x15\x30\x34", 3) == 0) { // skip request
+			printf("\nGOT SKIP REQUEST..\n");
 		}
 		
-		if (buffer[0] != 0x06) {
-			printf("\nERROR, unexpected answer\n");
-			goto exit;
-		}
 		usleep(1000*1000); // 50ms
 	}
+
 	printf("\n [I] File transfer complete.\n");
 	fx_Send_Complete(usb_handle, buffer);
 	
-	exit:
-		FREE(fdata);
+	exit_unalloc:
 		FREE(sdata);
+	exit:
 		printf("[>] Closing connection.\n");
 		fx_Send_Terminate(usb_handle, buffer);
 		usb_release_interface(usb_handle, 0);
