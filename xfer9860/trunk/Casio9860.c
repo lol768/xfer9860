@@ -192,18 +192,25 @@ int fx_Escape_Specialbytes(char *source, char *dest, int length) {
 	while(i < length) {
 		// replacement filter, disabled for now
 		/*switch (source[i]) {
-			case 0x0A:	source[i] = 0x0D; break;		// replace LF with CR
-			case 0x5C:	source[i+1] = 0x5C; j++; break;	// \ escapes itself
+			case 0x0A:	source[i] = 0x0D;	// replace LF with CR
 			default:	break;
 		}*/
-		// note - 0x20 = 32
-		if ((source[i] /*& 0xFF*/) < 0x20) {
+		
+		if (source[i] < 0x20) {
 			dest[j] = 0x5C;
 			dest[j+1] = 0x20+source[i];
 			j++;
-		} else {
-			*(dest+j) = *(source+i);
+			goto done;
 		}
+		
+		if (source[i] == 0x5C) {
+			dest[j] = 0x5C; dest[j+1] = 0x5C; j++; // I might have to use 0x7C here
+			goto done;
+		}
+		// default action
+		*(dest+j) = *(source+i);
+		
+	done:
 		j++;
 		i++;
 	}
