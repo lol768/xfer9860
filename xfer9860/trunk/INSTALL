@@ -1,7 +1,8 @@
-Install instructions for xfer9860
-================================================================================
+= Install instructions =========================================================
 
-There are no formal methods right now to install xfer9860. The only dependency is the usblib-library. To compile the source code, run:
+There are no formal methods right now to install xfer9860. The only dependency
+is the usblib-library. To compile the source code, run:
 	make
-And wait a few seconds. You can then run the program with:
-	./xfer9860
+And wait a few seconds. You can then run the program using:
+	./xfer9860 <sourcefile> <destfile>
+Note that destfile has to be a filename of up to 8 characters, AND a 3 character extension.
