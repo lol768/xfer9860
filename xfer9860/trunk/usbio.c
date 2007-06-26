@@ -26,7 +26,7 @@
 #include <usb.h>
 
 void debug(int input, char* array, int len){
-#ifdef __DEBUG__
+#ifdef __SNOOP__
 	unsigned char temp;
 	int i, j, line = 0;
 
@@ -67,7 +67,7 @@ void debug(int input, char* array, int len){
 	}
 
 	fprintf(stderr,"\n\n");
-#endif //__DEBUG__
+#endif //__SNOOP__
 }
 
 int ReadUSB(struct usb_dev_handle *usb_handle, char *buffer, int length) {

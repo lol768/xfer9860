@@ -25,7 +25,7 @@
 
 #include <usb.h>
 
-#define __DEBUG__
+//#define __SNOOP__	//uncomment to see traffic output
 #define LEN_LINE 16
 
 #define USB_WRITE_TIMEOUT 300
