@@ -175,7 +175,7 @@ int main(int argc, char *argv[]) {
 	// Usually never any errors on this stage anyway
 
 	for (i = 0; i < numpackets; i++) {
-		usleep(250*1000);
+		usleep(100*1000);
 		// read a chunk from file, and escape unwanted bytes in data
 		int readbytes = fread(fdata, 1, MAX_DATA_SIZE, sourcefile);
 		printf("> READ %i BYTES FROM DISK\n", readbytes);
