@@ -42,7 +42,7 @@
 
 #define MAX_RESEND_ATTEMPTS 3
 #define BUFFER_SIZE 512
-#define MAX_DATA_SIZE 256
+#define MAX_DATA_SIZE 238 // 238 makes 256b packets when unexpanded data is sent
 
 int main(int argc, char *argv[]) {
 	int ret = 1, errorcount;
@@ -163,60 +163,53 @@ int main(int argc, char *argv[]) {
 	if (fdata == NULL || sdata == NULL) {
 		printf("[E] Error allocating memory for file\n");
 	}
-	fread(fdata, 1, (int)file_status.st_size, sourcefile);
 	
-	// Required, because the calc can't handle bytel
-	int expandedbytes = fx_Escape_Specialbytes(fdata, sdata, file_status.st_size);
-	FREE(fdata);
-	int numpackets = (int)ceilf(expandedbytes/MAX_DATA_SIZE)+1;
+	int numpackets = (int)ceilf(file_status.st_size/MAX_DATA_SIZE)+1;	
 
 	printf(	"[>] Initiating transfer of %s to fls0, %i b per packet:\n"
-		"    %i bytes (%i bytes), %i packet(s).\n", argv[2], MAX_DATA_SIZE, file_status.st_size, expandedbytes, numpackets);
+		"    %i bytes, %i packet(s).\n", argv[2], MAX_DATA_SIZE, file_status.st_size, numpackets);
+	// Request transmission
 	fx_Send_File_to_Flash(usb_handle, buffer, file_status.st_size, argv[2], "fls0");
 	ReadUSB(usb_handle, buffer, 6);
-	if (!memcmp(buffer, "\x15\x30\x32\x30\x36\x45", 6)) {
-		printf("[E] The file %s already exists. Exiting.\n", argv[2]);
-		goto exit_unalloc;
-	}
+	// check removed, running in overwrite mode for eased repetitive testing
+	// Usually never any errors on this stage anyway
 
 	for (i = 0; i < numpackets; i++) {
-	resend_data:
-		if (i+1 == numpackets) { // Check if this is the last packet..
-			printf("SENDING: index:%i , dataoffset:%i , length:%i\n", i+1, i*MAX_DATA_SIZE, expandedbytes-(i*MAX_DATA_SIZE));
-			ret = fx_Send_Data(usb_handle, buffer, ST_FILE_TO_FLASH, numpackets, i+1, sdata+(i*MAX_DATA_SIZE), expandedbytes-(i*MAX_DATA_SIZE));
-		} else {
-			printf("SENDING: index:%i , dataoffset:%i , length:%i\n", i+1, i*MAX_DATA_SIZE, MAX_DATA_SIZE);
-			ret = fx_Send_Data(usb_handle, buffer, ST_FILE_TO_FLASH, numpackets, i+1, sdata+(i*MAX_DATA_SIZE), MAX_DATA_SIZE);
-		}
+		usleep(250*1000);
+		// read a chunk from file, and escape unwanted bytes in data
+		int readbytes = fread(fdata, 1, MAX_DATA_SIZE, sourcefile);
+		printf("> READ %i BYTES FROM DISK\n", readbytes);
+		int expandedbytes = fx_Escape_Specialbytes(fdata, sdata, readbytes);
 		
-		printf("SENT %i BYTES, %i BYTES OF DATA\n", ret, ret-18);
+		printf("> ESCAPED TO %i BYTES\n", expandedbytes);
 		
-		/*while(ReadUSB(usb_handle, buffer, 6) == 0) {
-			printf("[E] Got no response...\n");
-			sleep(2);
-			printf("    Resending packet.\n");
-			goto resend_data;
-		}*/
-		sleep(1);
-		if (ReadUSB(usb_handle, buffer, 6) == 0) {
-		printf("Resending\n");
-			goto resend_data;
-		}
-		if (memcmp(buffer, "\x15\x30\x31", 3) == 0) { //retransmission request
-			printf("\nGOT RETRANSMISSION REQUEST...\n");
+	resend_data: // send the chunk
+		printf("SENDING: index:%i , dataoffset:%i , expanded:%i , read:%i\n", i+1, i*MAX_DATA_SIZE, expandedbytes, readbytes);
+		ret = fx_Send_Data(usb_handle, buffer, ST_FILE_TO_FLASH, numpackets, i+1, sdata, expandedbytes);
+		
+		printf("SENT %i BYTES\n", ret);
 
+		if (ReadUSB(usb_handle, buffer, 6) == 0) {
+			printf("GOT NO RESPONSE\n");
+			usleep(500*1000);
+			//goto resend_data;//
 		}
-		if (memcmp(buffer, "\x15\x30\x34", 3) == 0) { // skip request
+		if (memcmp(buffer, "\x15\x30\x31", 3) == 0) {
+			printf("\nGOT RETRANSMISSION REQUEST...\n");
+			usleep(500*1000);
+			goto resend_data;
+		}
+		if (memcmp(buffer, "\x15\x30\x34", 3) == 0) {
 			printf("\nGOT SKIP REQUEST..\n");
+			usleep(3000*1000);
 		}
-		
-		usleep(1000*1000); // 50ms
 	}
 
 	printf("\n [I] File transfer complete.\n");
 	fx_Send_Complete(usb_handle, buffer);
 	
 	exit_unalloc:
+		FREE(fdata);
 		FREE(sdata);
 	exit:
 		printf("[>] Closing connection.\n");
