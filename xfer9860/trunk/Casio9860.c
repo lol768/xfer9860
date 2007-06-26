@@ -174,7 +174,7 @@ int fx_Send_Data(struct usb_dev_handle *usb_handle, char *buffer, char* subtype,
 
 int fx_Append_Checksum(char *buffer, int length) {
 	int i;
-	char sum = 0x00;
+	char sum = 0;
 	for (i = 1; i < length; i++) {
 		sum += *(buffer+i);
 	}
@@ -184,15 +184,18 @@ int fx_Append_Checksum(char *buffer, int length) {
 	return 0;
 }
 
+/*
+ * TODO: This function will have to take a parameter choosing whether to expect binary data or not.
+ */
 int fx_Escape_Specialbytes(char *source, char *dest, int length) {
 	int i = 0, j = 0;
 	while(i < length) {
-		// replacement filter
-		switch (source[i]) {
+		// replacement filter, disabled for now
+		/*switch (source[i]) {
 			case 0x0A:	source[i] = 0x0D; break;		// replace LF with CR
 			case 0x5C:	source[i+1] = 0x5C; j++; break;	// \ escapes itself
 			default:	break;
-		}
+		}*/
 		// note - 0x20 = 32
 		if ((source[i] /*& 0xFF*/) < 0x20) {
 			dest[j] = 0x5C;
