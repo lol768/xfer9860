@@ -28,6 +28,11 @@
 #include "usbio.h"
 #include "Casio9860.h"
 
+#ifdef WIN32
+	#include <windows.h>
+	#include <winbase.h>
+#endif
+
 #include <usb.h>
 #include <stdio.h>
 #include <string.h>
@@ -37,8 +42,15 @@
 #include <unistd.h>
 #include <math.h>
 
-/* Macro for nulling freed pointers */
-#define FREE(p)   do { free(p); (p) = NULL; } while(0)
+/* Macros */
+#define FREE(p)	do { free(p); (p) = NULL; } while(0)
+
+#ifdef WIN32
+	#define SLEEP(x)	do {Sleep(x);} while(0)
+#else
+	// Assume some *nix
+	#define SLEEP(x)	do {usleep(x*1000);} while(0)
+#endif
 
 #define MAX_VER_ATTEMPTS 3
 #define BUFFER_SIZE 512
@@ -49,6 +61,9 @@ int main(int argc, char *argv[]) {
 	char *buffer, *temp, *fdata, *sdata;
 	long int freespace = 0;
 	printf(	"xfer9860 v%s, Copyright (c) 2007 Andreas Bertheussen and Manuel Naranjo\n", VERSION);
+	#ifdef WIN32
+		printf("You are using the MS Windows port by kucalc.\n");
+	#endif
 	if (argc < 3) {
 		printf(	"Send a file to an fx-9860G (SD) by USB\n"
 			"Usage:\t%s <sourcefile> <destfile>\n", argv[0]);
@@ -61,11 +76,13 @@ int main(int argc, char *argv[]) {
 	}
 	short int destlen = strlen(argv[2]);
 	
+	#ifndef WIN32
 	// filename-check, the limits are as of now, 8 characters + dot + 3 character extension = 12 chars
 	if (destlen > 12 || strncasecmp(argv[2]+(destlen-4), ".", 1) != 0) {
 		printf("[E] Invalid destination. Should be 8 characters with a 3 character extension.\n");
 		return 1;
 	}
+	#endif
 	
 	struct stat file_status;
 	stat(argv[1], &file_status);	// gets filesize
@@ -88,7 +105,14 @@ int main(int argc, char *argv[]) {
 		printf("\n[E] Unable to open the USB device. Exiting.\n");
 		goto exit_close;
 	}
-
+	
+	#ifdef WIN32
+	if(usb_set_configuration(usb_handle, 1) < 0) { // needed on WIN32
+		fprintf(stderr, "[E] Unable to configure the USB device. Exiting\n");
+		goto exit_close;
+	}
+	#endif
+	
 	ret = usb_claim_interface(usb_handle, 0);
 	if (ret < 0) {
 		printf("\n[E] Unable to claim USB Interface. Exiting.\n");
@@ -176,7 +200,7 @@ int main(int argc, char *argv[]) {
 
 	for (i = 0; i < numpackets; i++) {
 		int packetResendCount = 0;
-		usleep(100*1000);
+		SLEEP(100);
 		// read a chunk from file, and escape unwanted bytes in data
 		int readbytes = fread(fdata, 1, MAX_DATA_SIZE, sourcefile);
 		int expandedbytes = fx_Escape_Specialbytes(fdata, sdata, readbytes);
@@ -193,16 +217,16 @@ int main(int argc, char *argv[]) {
 		
 		if (ReadUSB(usb_handle, buffer, 6) == 0) {
 			printf("GOT NO RESPONSE.\n");
-			usleep(500*1000);
+			SLEEP(500);
 		}
 		if (memcmp(buffer, "\x15\x30\x31", 3) == 0) {
 			printf("\nGOT RETRANSMISSION REQUEST.\n");
-			usleep(500*1000);
+			SLEEP(500);
 			goto resend_data;
 		}
 		if (memcmp(buffer, "\x15\x30\x34", 3) == 0) {
 			printf("\nGOT SKIP REQUEST.\n");
-			usleep(3000*1000);
+			SLEEP(3000);
 		}
 	}
 
