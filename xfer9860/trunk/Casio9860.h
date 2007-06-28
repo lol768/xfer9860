@@ -1,25 +1,24 @@
-/***************************************************************************
- *   xfer9860 - Transfer files between a Casio fx-9860G and computer	   *
- *									   *
- *   Copyright (C) 2007							   *
- *	Manuel Naranjo <naranjo.manuel@gmail.com>			   *
- *	Andreas Bertheussen <andreasmarcel@gmail.com>			   *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program; if not, write to the                         *
- *   Free Software Foundation, Inc.,                                       *
- *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
- ***************************************************************************/
+/*******************************************************************************
+	xfer9860 - fx-9860G (SD) communication utility
+	Copyright (C) 2007
+		Manuel Naranjo <naranjo.manuel@gmail.com>
+		Andreas Bertheussen <andreasmarcel@gmail.com>
+
+	This program is free software; you can redistribute it and/or
+	modify it under the terms of the GNU General Public License
+	as published by the Free Software Foundation; either version 2
+	of the License, or (at your option) any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+	MA  02110-1301, USA.
+*******************************************************************************/
 
 #ifndef CASIO_9860_H
 #define CASIO_9860_H
@@ -42,24 +41,40 @@
 #define NEGATIVE_MEMFULL	'5'
 #define NEGATIVE_IDENTIFY	'6'
 
+#define T_POSITIVE	0x06
+#define T_NEGATIVE	0x15
+#define T_COMMAND	0x01
+#define T_DATA		0x02
+#define T_CHANGE	0x03
+#define T_VERIFY	0x05
+
 #define ST_FILE_TO_FLASH	"\x34\x35"
 
-int init_9860(usb_dev_handle*);
+#define MAX_DATA_PAYLOAD 256
+
+struct usb_dev_handle *fx_getDeviceHandle();
+int fx_initDevice(struct usb_dev_handle *usb_handle);
+
 struct usb_device *device_init(void);
 
-// Communication functions
-int fx_Send_Complete(struct usb_dev_handle*, char*);
-int fx_Send_Verify(struct usb_dev_handle*, char*, char*);
-int fx_Send_Terminate(struct usb_dev_handle*, char*);
-int fx_Send_Positive(struct usb_dev_handle*, char*, char);
-int fx_Send_Negative(struct usb_dev_handle*, char*, char);
-int fx_Send_Change_Direction(struct usb_dev_handle*, char*);
-int fx_Send_Flash_Capacity_Request(struct usb_dev_handle*, char*, char*);
-int fx_Send_File_to_Flash(struct usb_dev_handle*, char *, int, char *, char *);
+// routine functions
+int fx_doConnVer(struct usb_dev_handle*);
+int fx_getFlashCapacity(struct usb_dev_handle *usb_handle, char *device);
 
-int fx_Send_Data(struct usb_dev_handle*, char*, char*, int, int, char*, int);
+// packet functions
+int fx_sendComplete(struct usb_dev_handle*, char*);
+int fx_sendVerify(struct usb_dev_handle*, char*, char*);
+int fx_sendTerminate(struct usb_dev_handle*, char*);
+int fx_sendPositive(struct usb_dev_handle*, char*, char);
+int fx_sendNegative(struct usb_dev_handle*, char*, char);
+int fx_sendChange_Direction(struct usb_dev_handle*, char*);
+int fx_sendFlash_Capacity_Request(struct usb_dev_handle*, char*, char*);
+int fx_sendFile_to_Flash(struct usb_dev_handle*, char *, int, char *, char *);
+int fx_sendData(struct usb_dev_handle*, char*, char*, int, int, char*, int);
+
+int fx_getPacketType(char*);
 
 // Service functions
-int fx_Append_Checksum(char*, int);
-int fx_Escape_Specialbytes(char*, char*, int);
+int fx_append_Checksum(char*, int);
+int fx_escapeBytes(char*, char*, int);
 #endif

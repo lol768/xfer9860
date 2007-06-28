@@ -19,19 +19,4 @@
 	MA  02110-1301, USA.
 *******************************************************************************/
 
-#ifndef USBIO_H
-#define USBIO_H
-
-#include <usb.h>
-
-//#define __SNOOP__	//uncomment to see traffic output
-#define LEN_LINE 16
-
-#define USB_WRITE_TIMEOUT 300
-#define USB_READ_TIMEOUT 1000
-
-void debug(int input, char* array, int len);
-int ReadUSB(struct usb_dev_handle *usb_handle, char* buffer, int length);
-int WriteUSB(struct usb_dev_handle *usb_handle, char* buffer, int length);
-
-#endif
+int sendFile(char*, char*, int);
