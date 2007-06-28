@@ -42,14 +42,12 @@ struct usb_dev_handle* fx_getDeviceHandle() {
 		return NULL;
 	}
 
-	#ifdef WIN32
 	ret = usb_set_configuration(usb_handle, 1);
 	if (ret < 0) { // needed on WIN32
 		printf("\nERR: usb_set_configuration(): %i\n", ret);
 		usb_close(usb_handle);
 		return NULL;
 	}
-	#endif
 
 	ret = usb_claim_interface(usb_handle, 0);
 	if (ret < 0) {
