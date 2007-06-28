@@ -79,8 +79,8 @@ int sendFile(char* sourceFileName, char* destFileName, int throttleSetting) {
 	}
 
 	int packetCount = ceil(sourceFileStatus.st_size/MAX_DATA_PAYLOAD) + 1;
-	printf("\n[>] Starting transfer of %s as %s to fls0, %i b, %i packets..\n",
-	       sourceFileName, destFileName, sourceFileStatus.st_size, packetCount);
+	printf("\n[>] Starting transfer of %s to fls0, %i b, %i packets..\n",
+	       destFileName, sourceFileStatus.st_size, packetCount);
 	char *fData = calloc(MAX_DATA_PAYLOAD, sizeof(char));
 	char *sData = calloc(MAX_DATA_PAYLOAD*2, sizeof(char));
 	char *buffer = calloc((MAX_DATA_PAYLOAD*2)+18, sizeof(char));	// work buffer
@@ -91,6 +91,7 @@ int sendFile(char* sourceFileName, char* destFileName, int throttleSetting) {
 	if (fx_getPacketType(buffer) != T_POSITIVE) { printf("[E] Unable to start transfer.\n"); goto exit; }
 
 	// main transfer loop
+	printf("[I] [");
 	for (i = 0; i < packetCount; i++) {
 		int resendCount = 0, readBytes = 0, escapedBytes = 0;
 		readBytes = fread(fData, 1, MAX_DATA_PAYLOAD, sourceFile);
@@ -103,7 +104,7 @@ int sendFile(char* sourceFileName, char* destFileName, int throttleSetting) {
 		}
 		resendCount++;
 		ret = fx_sendData(usb_handle, buffer, ST_FILE_TO_FLASH, packetCount, i+1, sData, escapedBytes);
-		printf(" >>> Packet %i of %i sent, %i bytes\n", i+1, packetCount, ret);
+		if (i % 4 == 0) { printf("#"); fflush(stdout); } // indicates every 1kB
 		if (ReadUSB(usb_handle, buffer, 6) == 0) {
 			printf("ERR: Got no response, retrying.\n");
 			goto resend_data;
@@ -113,7 +114,7 @@ int sendFile(char* sourceFileName, char* destFileName, int throttleSetting) {
 			goto resend_data;
 		}
 	}
-	printf("[I] File transfer completed.\n\n");
+	printf("]\n[I] File transfer completed.\n\n");
 	fx_sendComplete(usb_handle, buffer);
     exit:
 	free(buffer);
