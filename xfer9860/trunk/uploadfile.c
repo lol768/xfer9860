@@ -1,5 +1,5 @@
 /*******************************************************************************
-	xfer9860 - fx-9860G (SD) communication utility
+	xfer9860 - a Casio fx-9860G (SD) communication utility
 	Copyright (C) 2007
 		Andreas Bertheussen <andreasmarcel@gmail.com>
 
@@ -21,7 +21,6 @@
 
 #include <stdio.h>
 #include <string.h>
-
 
 #include <sys/types.h>	/* stat()*/
 #include <sys/stat.h>	/**/
@@ -91,7 +90,7 @@ int sendFile(char* sourceFileName, char* destFileName, int throttleSetting) {
 	if (fx_getPacketType(buffer) != T_POSITIVE) { printf("[E] Unable to start transfer.\n"); goto exit; }
 
 	// main transfer loop
-	printf("[I] [");
+	printf("[");
 	for (i = 0; i < packetCount; i++) {
 		int resendCount = 0, readBytes = 0, escapedBytes = 0;
 		readBytes = fread(fData, 1, MAX_DATA_PAYLOAD, sourceFile);

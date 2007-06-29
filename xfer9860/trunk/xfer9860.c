@@ -1,5 +1,5 @@
 /*******************************************************************************
-	xfer9860 - fx-9860G (SD) communication utility
+	xfer9860 - a Casio fx-9860G (SD) communication utility
 	Copyright (C) 2007
 		Andreas Bertheussen <andreasmarcel@gmail.com>
 
@@ -42,8 +42,7 @@ int main(int argc, char *argv[]) {
 				throttleSetting = atoi(optarg);
 				break;
 			case 'h':
-				displayHelp();
-				return 0;
+				break;
 			case 'u':
 				sourceFileName = optarg;
 				sendFileFlag = 1;
@@ -67,14 +66,14 @@ int main(int argc, char *argv[]) {
 }
 
 void displayHelp() {
-	printf(	"--- Send file to an fx-9860G (SD) by USB.\n"
-		"Usage: xfer9860 <action> filename [-t throttle]\n"
+	printf(	"--- a Casio fx-9860G (SD) communication utility.\n"
+		"Usage: xfer9860 <action> destname [-t throttle]\n"
 		"Actions:\n"
-		" -u file\tUpload `file' from PC to `filename' on device.\n"
-		//" -d file\tDownload `file' from device to`filename' on PC.\n"
+		" -u srcname\tUpload file `srcname' from PC to `destname' on device.\n"
+		//" -d srcname\tDownload file `srcname' from device to `destname' on PC.\n"
 		"\nParameters:\n"
-		" -t\tThrottle setting. The value specified in ms will be used to slow down\n"
-	      	"\t transfers. Default is 0. Try increasing this in case of problems.\n"
+		" -t value\tThrottle setting. The value specifies the delay in ms between\n"
+	      	"\t\tpackets. Default is 0. Try increasing this in case of problems.\n"
 	      	"");
 	printf("\n");
 
