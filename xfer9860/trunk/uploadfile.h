@@ -1,5 +1,5 @@
 /*******************************************************************************
-	xfer9860 - fx-9860G (SD) communication utility
+	xfer9860 - a Casio fx-9860G (SD) communication utility
 	Copyright (C) 2007
 		Andreas Bertheussen <andreasmarcel@gmail.com>
 
