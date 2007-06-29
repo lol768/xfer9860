@@ -22,7 +22,7 @@
 #include <stdio.h>
 #include <unistd.h>
 
-#include "sendfile.h"
+#include "uploadfile.h"
 
 const char* _version_ = "0.2";
 
