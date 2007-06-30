@@ -59,8 +59,8 @@ struct usb_device *device_init(void);
 
 // routine functions
 int fx_doConnVer(struct usb_dev_handle*);
-int fx_getFlashCapacity(struct usb_dev_handle *usb_handle, char *device);
-
+int fx_getFlashCapacity(struct usb_dev_handle*, char*);
+int fx_getMCSCapacity(struct usb_dev_handle*);
 // packet functions
 int fx_sendComplete(struct usb_dev_handle*, char*);
 int fx_sendVerify(struct usb_dev_handle*, char*, char*);
@@ -69,6 +69,8 @@ int fx_sendPositive(struct usb_dev_handle*, char*, char);
 int fx_sendNegative(struct usb_dev_handle*, char*, char);
 int fx_sendChange_Direction(struct usb_dev_handle*, char*);
 int fx_sendFlash_Capacity_Request(struct usb_dev_handle*, char*, char*);
+int fx_sendFlashCollectGarbage(struct usb_dev_handle*, char*, char*);
+int fx_sendMCSCapacityRequest(struct usb_dev_handle*, char*);
 int fx_sendFile_to_Flash(struct usb_dev_handle*, char *, int, char *, char *);
 int fx_sendData(struct usb_dev_handle*, char*, char*, int, int, char*, int);
 
