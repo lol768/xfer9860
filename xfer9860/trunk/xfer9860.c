@@ -59,7 +59,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	if (getInfoFlag) {
-		getInfo();
+		getInfo(throttleSetting);
 		return 0;
 	}
 
