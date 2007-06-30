@@ -25,7 +25,7 @@
 
 #include "Casio9860.h"
 
-int getInfo() {
+int getInfo(int throttleSetting) {
 	char* buffer = calloc(142, sizeof(char));
 	printf("[>] Setting up USB connection.. ");
 	struct usb_dev_handle *usb_handle;
@@ -43,17 +43,19 @@ int getInfo() {
 	if (fx_doConnVer(usb_handle) != 0) { printf("Failed.\n"); return 1; }
 	else { printf("Done!\n"); }
 
-
+	usleep(1000*throttleSetting);
 	printf("[I] Main memory:");
 	int mcsCapacity = fx_getMCSCapacity(usb_handle);
 	if (mcsCapacity < 0) { printf("[E] Error requesting MCS capacity information.\n"); }
 	printf("\t%i%% available.\n", (mcsCapacity*100)/62928 );
 
+	usleep(1000*throttleSetting);
 	printf("[I] Storage memory:");
 	int flashCapacity = fx_getFlashCapacity(usb_handle, "fls0");
 	if (flashCapacity < 0) { printf("\n[E] Error requesting flash capacity information.\n"); return 1; }
 	printf("\t%i%% available.\n", (flashCapacity*100)/1572864);
 
+	usleep(1000*throttleSetting);
 	printf("[>] Closing connection.. ");
 	fx_sendComplete(usb_handle, buffer);
 	printf("Done!\n");
