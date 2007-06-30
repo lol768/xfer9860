@@ -23,6 +23,7 @@
 #include <unistd.h>
 
 #include "uploadfile.h"
+#include "getinfo.h"
 
 const char* _version_ = "0.2";
 
@@ -33,10 +34,11 @@ int main(int argc, char *argv[]) {
 	char *sourceFileName;
 	int throttleSetting = 0;
 	int sendFileFlag = 0;
+	int getInfoFlag = 0;
 	int throttleAble = 0;
 	printf("--- xfer9860 v%s Copyright (C) 2007 Andreas Bertheussen and Manuel Naranjo.\n", _version_);
 
-	while ((opt = getopt(argc, argv, "t:hu:")) != -1) {
+	while ((opt = getopt(argc, argv, "t:hu:i")) != -1) {
 		switch(opt) {
 			case 't':
 				throttleSetting = atoi(optarg);
@@ -48,9 +50,17 @@ int main(int argc, char *argv[]) {
 				sendFileFlag = 1;
 				throttleAble = 1;
 				break;
+			case 'i':
+				getInfoFlag = 1;
+				break;
 			default:
 				return 0;
 		}
+	}
+
+	if (getInfoFlag) {
+		getInfo();
+		return 0;
 	}
 
 	if (sendFileFlag) {
@@ -71,6 +81,7 @@ void displayHelp() {
 		"Actions:\n"
 		" -u srcname\tUpload file `srcname' from PC to `destname' on device.\n"
 		//" -d srcname\tDownload file `srcname' from device to `destname' on PC.\n"
+		" -i\t\tShow information about the connected calculator.\n"
 		"\nParameters:\n"
 		" -t value\tThrottle setting. The value specifies the delay in ms between\n"
 	      	"\t\tpackets. Default is 0. Try increasing this in case of problems.\n"

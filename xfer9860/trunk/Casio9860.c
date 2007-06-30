@@ -197,6 +197,27 @@ int fx_sendFlash_Capacity_Request(struct usb_dev_handle *usb_handle, char *buffe
 	return WriteUSB(usb_handle, buffer, 34+len);
 }
 
+int fx_sendMCSCapacityRequest(struct usb_dev_handle *usb_handle, char *buffer) {
+	memcpy(buffer, "\x01\x32\x42\x30", 4);	// ST is 42
+	fx_appendChecksum(buffer, 4);
+
+	return WriteUSB(usb_handle, buffer, 6);
+}
+
+int fx_sendFlashCollectGarbage(struct usb_dev_handle *usb_handle, char *buffer, char *device) {
+	short int len = strlen(device);
+	memcpy(buffer, "\x01\x35\x31\x31", 4);	// ST 51
+	sprintf(buffer+4, "%04X", 24+len);
+	memcpy(buffer+8, "000000000000", 12);
+	sprintf(buffer+20, "00000000%02X00", len);
+	memcpy(buffer+32, device, len);
+
+	fx_appendChecksum(buffer, 32+len);
+
+	return WriteUSB(usb_handle, buffer, 34+len);
+
+}
+
 int fx_getFlashCapacity(struct usb_dev_handle *usb_handle, char *device) {
 	int freeSize = 0;
 	char * buffer = calloc(40,sizeof(char));
@@ -223,6 +244,32 @@ int fx_getFlashCapacity(struct usb_dev_handle *usb_handle, char *device) {
 	free(buffer);
 
 	return freeSize; // converts 'hex-ascii' to int
+}
+
+int fx_getMCSCapacity(struct usb_dev_handle *usb_handle) {
+	int freeSize = 0;
+	char * buffer = calloc(40,sizeof(char));
+	fx_sendMCSCapacityRequest(usb_handle, buffer);
+	ReadUSB(usb_handle, buffer, 6);
+		if (fx_getPacketType(buffer) != T_POSITIVE) { printf("ERR: fx_getMCShCapacity: no proper response\n"); return -1; }
+	fx_sendChange_Direction(usb_handle, buffer);
+
+	ReadUSB(usb_handle, buffer, 0x26);
+		if (fx_getPacketType(buffer) != T_COMMAND) { printf("ERR: fx_getMCSCapacity: no returned command\n"); return -1; }
+
+	char *tmp = calloc(9, sizeof(char));
+		if (tmp == NULL) { printf("ERR: fx_getMCSCapacity: alloc error\n"); return -1; }
+
+	memcpy(tmp, buffer+12, 8);	// got value
+	freeSize = strtol(tmp, NULL, 16);
+
+	fx_sendPositive(usb_handle, buffer, POSITIVE_NORMAL);
+	ReadUSB(usb_handle, buffer, 6);
+
+	free(tmp);
+	free(buffer);
+
+	return freeSize;
 }
 
 int fx_sendFile_to_Flash(struct usb_dev_handle *usb_handle, char *buffer, int filesize, char *filename, char *device) {
