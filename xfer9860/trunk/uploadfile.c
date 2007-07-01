@@ -29,7 +29,7 @@
 
 #include "Casio9860.h"
 
-int sendFile(char* sourceFileName, char* destFileName, int throttleSetting) {
+int uploadFile(char* sourceFileName, char* destFileName, int throttleSetting) {
 	int ret = 0, i;
 
 	FILE *sourceFile = fopen(sourceFileName, "rb");
@@ -59,7 +59,7 @@ int sendFile(char* sourceFileName, char* destFileName, int throttleSetting) {
 		return 1;
 	}
 	if (fx_initDevice(usb_handle) < 0) {	// does calculator-specific setup
-		printf("\n[E] Error initializing device.\n");
+		printf("\n[E] Error initializing device.\n"); return 1;
 	}
 	printf("Connected!\n");
 
@@ -83,9 +83,9 @@ int sendFile(char* sourceFileName, char* destFileName, int throttleSetting) {
 	char *fData = calloc(MAX_DATA_PAYLOAD, sizeof(char));
 	char *sData = calloc(MAX_DATA_PAYLOAD*2, sizeof(char));
 	char *buffer = calloc((MAX_DATA_PAYLOAD*2)+18, sizeof(char));	// work buffer
-	if (fData == NULL || sData == NULL) { printf("[E] Error allocating memory for file data."); goto exit; }
+	if (fData == NULL || sData == NULL || buffer == NULL) { printf("[E] Error allocating memory."); goto exit; }
 
-	fx_sendFile_to_Flash(usb_handle, buffer, sourceFileStatus.st_size, destFileName, "fls0");
+	fx_sendFlashFileTransmission(usb_handle, buffer, sourceFileStatus.st_size, destFileName, "fls0");
 	ReadUSB(usb_handle, buffer, 6);
 	if (fx_getPacketType(buffer) != T_POSITIVE) { printf("[E] Unable to start transfer.\n"); goto exit; }
 

@@ -272,7 +272,7 @@ int fx_getMCSCapacity(struct usb_dev_handle *usb_handle) {
 	return freeSize;
 }
 
-int fx_sendFile_to_Flash(struct usb_dev_handle *usb_handle, char *buffer, int filesize, char *filename, char *device) {
+int fx_sendFlashFileTransmission(struct usb_dev_handle *usb_handle, char *buffer, int filesize, char *filename, char *device) {
 	short int fnsize = strlen(filename);
 	short int devsize = strlen(device);
 	memcpy(buffer, "\x01\x34\x35\x31", 4); /* T, ST, DF */
