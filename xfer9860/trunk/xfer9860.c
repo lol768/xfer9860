@@ -22,10 +22,11 @@
 #include <stdio.h>
 #include <unistd.h>
 
-#include "uploadfile.h"
-#include "getinfo.h"
+#include "config.h"
 
-const char* _version_ = "SVN";
+#include "uploadfile.h"
+#include "downloadfile.h"
+#include "getinfo.h"
 
 void displayHelp();
 void displayAbout();
@@ -39,11 +40,12 @@ int main(int argc, char *argv[]) {
 
 	/* operations */
 	int uploadFileFlag = 0;
+	int downloadFileFlag = 0;
 	int getInfoFlag = 0;
 
-	printf("--- xfer9860 %s  Copyright (C) 2007 Andreas Bertheussen and Manuel Naranjo.\n", _version_);
+	printf("--- xfer9860 %s  Copyright (C) 2007 Andreas Bertheussen and Manuel Naranjo.\n", _VERSION_);
 
-	while ((opt = getopt(argc, argv, "t:u:iha")) != -1) {
+	while ((opt = getopt(argc, argv, "t:u:d:iha")) != -1) {
 		switch(opt) {
 			case 't':
 				throttleSetting = atoi(optarg);
@@ -52,6 +54,10 @@ int main(int argc, char *argv[]) {
 			case 'u':
 				sourceFileName = optarg;
 				uploadFileFlag = 1;
+				break;
+			case 'd':
+				sourceFileName = optarg;
+				downloadFileFlag = 1;
 				break;
 			case 'i':
 				getInfo(throttleSetting);
@@ -64,15 +70,15 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
-	if (uploadFileFlag) {
-		if (optind >= argc)
-			printf("You must specify a destination file name.\n");
-		else
-			uploadFile(sourceFileName, argv[optind], throttleSetting);
-		return 0;
+	if ((uploadFileFlag || downloadFileFlag) && optind >= argc) {
+		printf("You must specify a destination file name.\n");
+		return 1;
 	}
 
-	displayHelp();
+	if (uploadFileFlag) { uploadFile(sourceFileName, argv[optind], throttleSetting);	return 0; }
+	if (downloadFileFlag) { downloadFile(sourceFileName, argv[optind], throttleSetting);	return 0; }
+
+	displayHelp(); // default action if none of the above are catched
 	return 0;
 }
 
@@ -80,8 +86,9 @@ void displayHelp() {
 	printf(	"--- a Casio fx-9860G (SD) communication utility.\n"
 		"Usage: xfer9860 <action> destname [-t throttle]\n"
 		"Calculator actions:\n"
-		" -u srcname\tUpload file `srcname' from PC to `destname' on device.\n"
-		//" -d srcname\tDownload file `srcname' from device to `destname' on PC.\n" // NOT IMPLEMENTED YET
+		" -u srcname\tUpload file `srcname' from disk to `destname' on device.\n"
+		" -d srcname\tDownload file `srcname' from device to `destname' on disk.\n"
+		"\t\tNote that this is significantly slower than uploading.\n"
 		" -i\t\tShows information about the connected calculator.\n"
 		"\nParameters:\n"
 		" -t value\tThrottle setting. The value specifies the delay in ms between\n"

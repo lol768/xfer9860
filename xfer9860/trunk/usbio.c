@@ -20,12 +20,13 @@
 *******************************************************************************/
 
 #include "usbio.h"
+#include "config.h"
 
 #include <stdio.h>
 #include <usb.h>
 
 void debug(int input, char* array, int len){
-#ifdef __SNOOP__
+#ifdef _SNOOP_
 	unsigned char temp;
 	int i, j, line = 0;
 
@@ -39,7 +40,7 @@ void debug(int input, char* array, int len){
 			fprintf(stderr, "\t");
 			for (j = line; j < line + LEN_LINE; j++){
 				char u = (unsigned char) array[j];
-				if (u > 31) { fprintf(stderr, "%c", u); }
+				if (isprint(u)) { fprintf(stderr, "%c", u); }
 				else { fprintf(stderr, "."); }
 			}
 
@@ -66,7 +67,7 @@ void debug(int input, char* array, int len){
 	}
 
 	fprintf(stderr,"\n\n");
-#endif //__SNOOP__
+#endif //_SNOOP_
 }
 
 int ReadUSB(struct usb_dev_handle *usb_handle, char *buffer, int length) {
