@@ -71,7 +71,8 @@ int fx_sendChange_Direction(struct usb_dev_handle*, char*);
 int fx_sendFlash_Capacity_Request(struct usb_dev_handle*, char*, char*);
 int fx_sendFlashCollectGarbage(struct usb_dev_handle*, char*, char*);
 int fx_sendMCSCapacityRequest(struct usb_dev_handle*, char*);
-int fx_sendFlashFileTransmission(struct usb_dev_handle*, char *, int, char *, char *);
+int fx_sendFlashFileTransmission(struct usb_dev_handle*, char*, int, char*, char*);
+int fx_sendFlashFileTransmissionRequest(struct usb_dev_handle*, char*, char*, char*);
 int fx_sendData(struct usb_dev_handle*, char*, char*, int, int, char*, int);
 
 int fx_getPacketType(char*);
@@ -79,4 +80,7 @@ int fx_getPacketType(char*);
 // Service functions
 int fx_append_Checksum(char*, int);
 int fx_escapeBytes(char*, char*, int);
+int fx_unescapeBytes(char *, char*, int);
+long int fx_asciiHexToInt(char *, int);
+
 #endif

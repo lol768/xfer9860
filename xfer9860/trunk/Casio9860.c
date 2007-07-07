@@ -275,11 +275,26 @@ int fx_getMCSCapacity(struct usb_dev_handle *usb_handle) {
 int fx_sendFlashFileTransmission(struct usb_dev_handle *usb_handle, char *buffer, int filesize, char *filename, char *device) {
 	short int fnsize = strlen(filename);
 	short int devsize = strlen(device);
-	memcpy(buffer, "\x01\x34\x35\x31", 4); /* T, ST, DF */
+	memcpy(buffer, "\x01\x34\x35\x31", 4); /* T, ST = 45, DF */
 	sprintf(buffer+4, "%04X", 24+fnsize+devsize);
 	memcpy(buffer+8, "0280", 4); /* OW, DT */
 	sprintf(buffer+12, "%08X", filesize); /* FS   8 byte*/
 	sprintf(buffer+20, "00%02X0000%02X00", fnsize, devsize); /* DS1 - DS6 (12b)*/
+	sprintf(buffer+32, "%s%s", filename, device);
+
+	fx_appendChecksum(buffer, 32+fnsize+devsize);
+
+	return WriteUSB(usb_handle, buffer, 34+fnsize+devsize);
+}
+
+int fx_sendFlashFileTransmissionRequest(struct usb_dev_handle *usb_handle, char* buffer, char* filename, char* device) {
+	short int fnsize = strlen(filename);
+	short int devsize = strlen(device);
+	memcpy(buffer, "\x01\x34\x34\x31", 4); /* T, ST = 44, DF */
+	sprintf(buffer+4, "%04X", 24+fnsize+devsize);
+	memcpy(buffer+8, "0000", 4); /* OW, DT */
+	sprintf(buffer+12, "00000000"); /* FS   8 byte*/
+	sprintf(buffer+20, "00%02X0000%02X00", fnsize, devsize); // DS2 and DS5 are in use, no folder support yet
 	sprintf(buffer+32, "%s%s", filename, device);
 
 	fx_appendChecksum(buffer, 32+fnsize+devsize);
@@ -310,9 +325,32 @@ int fx_appendChecksum(char *buffer, int length) {
 	return 0;
 }
 
-/*
- * TODO: This function will have to take a parameter choosing whether to expect binary data or not.
- */
+int fx_unescapeBytes(char *source, char*dest, int length) {
+	int i = 0, j = 0;
+	while (i < length) {
+		if (source[i] == 0x5C) { // if we find an escape character.. look at next byte
+			if (source[i+1] == 0x5C) { // if it's another escape char, it is taken literally
+				dest[j] = source[i];
+				i++;	// and we skip the following byte
+				goto done;
+			} else {
+				dest[j] = source[i+1]-0x20; // if its a usual byte, subtract 0x20
+				i++;
+				goto done;
+			}
+		}
+
+		// default copying
+		dest[j] = source[i];
+
+	done:
+		i++;
+		j++;
+	}
+
+	return j;
+}
+
 int fx_escapeBytes(char *source, char *dest, int length) {
 	int i = 0, j = 0;
 	while(i < length) {
@@ -341,4 +379,12 @@ int fx_escapeBytes(char *source, char *dest, int length) {
 		i++;
 	}
 	return j; // length of destination (new) buffer
+}
+
+long int fx_asciiHexToInt(char *source, int length) {
+	char *tmp = calloc(length+1, sizeof(char));
+	memcpy(tmp, source, length); tmp[length] = 0; // using the extra byte for null-termination
+	int value = strtol(tmp, NULL, 16);
+	free(tmp);
+	return value;
 }

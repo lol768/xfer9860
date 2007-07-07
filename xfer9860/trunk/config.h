@@ -19,18 +19,13 @@
 	MA  02110-1301, USA.
 *******************************************************************************/
 
-#ifndef USBIO_H
-#define USBIO_H
+#ifndef CONFIG_H
+#define CONFIG_H
+// common include-file with program-wide definitions
 
-#include <usb.h>
+#define _VERSION_ "SVN"
 
-#define LEN_LINE 16
-
-#define USB_WRITE_TIMEOUT 300
-#define USB_READ_TIMEOUT 600
-
-void debug(int input, char* array, int len);
-int ReadUSB(struct usb_dev_handle *usb_handle, char* buffer, int length);
-int WriteUSB(struct usb_dev_handle *usb_handle, char* buffer, int length);
+//#define __DEBUG__	// not in use atm
+#define __SNOOP__
 
 #endif
