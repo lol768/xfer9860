@@ -42,12 +42,12 @@ int readPacket(struct usb_dev_handle *usb_handle, char *buffer) {
 int downloadFile(char* sourceFileName, char* destFileName, int throttleSetting) {
 	int fileSize = 0;
 	FILE *destFile = fopen(destFileName, "w");
-	if (destFile == NULL) { printf("[E] Cannot open file for writing.\n"); goto exit; }
+	if (destFile == NULL) { printf("[E] Cannot open file for writing.\n"); return 1; }
 
 	char* buffer =	calloc((MAX_DATA_PAYLOAD*2)+18, sizeof(char));
 	char* fData =	calloc((MAX_DATA_PAYLOAD*2)+18, sizeof(char));
 
-	if (fData == NULL || buffer == NULL) { printf("[E] Error allocating memory\n"); goto exit; }
+	if (fData == NULL || buffer == NULL) { printf("[E] Error allocating memory\n"); goto exit_unalloc; }
 
 	printf("[>] Setting up USB connection.. ");
 	struct usb_dev_handle *usb_handle;
@@ -55,24 +55,24 @@ int downloadFile(char* sourceFileName, char* destFileName, int throttleSetting) 
 	if ((int)usb_handle == -1 || usb_handle == NULL) {
 		printf(	"\n[E] A listening device could not be found.\n"
 		      	"    Make sure it is receiving; press [ON], [MENU], [sin], [F2]\n");
-		goto exit;
+		goto exit_unalloc;
 	}
 	if (fx_initDevice(usb_handle) < 0) {	// does calculator-specific setup
-		printf("\n[E] Error initializing device.\n"); goto exit;
+		printf("\n[E] Error initializing device.\n"); goto exit_release;
 	}
 	printf("Connected!\n");
 
 	printf("[>] Verifying device.. ");
-	if (fx_doConnVer(usb_handle) != 0) { printf("Failed.\n"); goto exit; }
+	if (fx_doConnVer(usb_handle) != 0) { printf("Failed.\n"); goto exit_release; }
 	else { printf("Done!\n"); }
 
 	fx_sendFlashFileTransmissionRequest(usb_handle, buffer, sourceFileName, "fls0");
 	ReadUSB(usb_handle, buffer, 6);
-	if (fx_getPacketType(buffer) == T_NEGATIVE) { printf("[E] The file could not be found on the device.\n"); goto exit;}
+	if (fx_getPacketType(buffer) == T_NEGATIVE) { printf("[E] The file could not be found on the device.\n"); goto exit_release;}
 
 	fx_sendChange_Direction(usb_handle, buffer);
 	ReadUSB(usb_handle, buffer, 0x40);
-	if (fx_getPacketType( buffer) != T_COMMAND) { printf("[E] Did not receive expected transmission.\n"); goto exit; }
+	if (fx_getPacketType( buffer) != T_COMMAND) { printf("[E] Did not receive expected transmission.\n"); goto exit_release; }
 
 	// Read filesize from offset 12, 8 bytes
 	fx_sendPositive(usb_handle, buffer, POSITIVE_NORMAL);
@@ -87,9 +87,9 @@ int downloadFile(char* sourceFileName, char* destFileName, int throttleSetting) 
 	int dataWritten = 0;
 	printf("[");
 	while(1) { // receive loop
-
 		packetLength = readPacket(usb_handle, buffer);
-		// need checks on packet
+		if (fx_getPacketType(buffer) != T_DATA) { printf("[E] Did not receive expected data packet.\n"); goto exit_release; }
+		// the checksum has to be controlled
 		dataLength = fx_asciiHexToInt(buffer+OFF_DS, 4);
 		dataLength -= 8; // subtract the space for PN and TP to get length of DD field
 
@@ -111,7 +111,9 @@ int downloadFile(char* sourceFileName, char* destFileName, int throttleSetting) 
 
 	printf("]\n[I] File download completed.\n\n"); fflush(stdout);
 	fx_sendComplete(usb_handle, buffer);
-exit:
+exit_release:
+	fx_releaseDeviceHandle(usb_handle);
+exit_unalloc:
 	free(fData);
 	free(buffer);
 	fclose(destFile);

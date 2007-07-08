@@ -59,6 +59,11 @@ struct usb_dev_handle* fx_getDeviceHandle() {
 	return usb_handle;
 }
 
+void fx_releaseDeviceHandle(struct usb_dev_handle* usb_handle) {
+	usb_release_interface(usb_handle, 0);
+	return;
+}
+
 struct usb_device *device_init(void) {
 	struct usb_bus *usb_bus;
 	struct usb_device *dev;
@@ -344,12 +349,6 @@ int fx_unescapeBytes(char *source, char*dest, int length) {
 int fx_escapeBytes(char *source, char *dest, int length) {
 	int i = 0, j = 0;
 	while(i < length) {
-		// replacement filter, disabled for now
-		/*switch (source[i]) {
-			case 0x0A:	source[i] = 0x0D;	// replace LF with CR
-			default:	break;
-		}*/
-
 		if (source[i] < 0x20) {
 			dest[j] = 0x5C;
 			dest[j+1] = 0x20+source[i];

@@ -43,7 +43,7 @@ int uploadFile(char* sourceFileName, char* destFileName, int throttleSetting) {
 	if (destFileNameLength > 12) {
 		printf(	"[E] The destination filename: %s\n"
 			"     is too long. Filesystem only supports 12 characters.\n", destFileName);
-		return 1;
+		goto exit_closefile;
 	}
 
 	struct stat sourceFileStatus;
@@ -56,25 +56,25 @@ int uploadFile(char* sourceFileName, char* destFileName, int throttleSetting) {
 	if ((int)usb_handle == -1 || usb_handle == NULL) {
 		printf(	"\n[E] A listening device could not be found.\n"
 		      	"    Make sure it is receiving; press [ON], [MENU], [sin], [F2]\n");
-		return 1;
+		goto exit_release;
 	}
 	if (fx_initDevice(usb_handle) < 0) {	// does calculator-specific setup
-		printf("\n[E] Error initializing device.\n"); return 1;
+		printf("\n[E] Error initializing device.\n"); goto exit_release;
 	}
 	printf("Connected!\n");
 
 	printf("[>] Verifying device.. ");
-	if (fx_doConnVer(usb_handle) != 0) { printf("Failed.\n"); return 1; }
+	if (fx_doConnVer(usb_handle) != 0) { printf("Failed.\n"); goto exit_release; }
 	else { printf("Done!\n"); }
 
 	printf("[>] Requesting fls0 capacity.. ");
 	int flashCapacity = fx_getFlashCapacity(usb_handle, "fls0");
-	if (flashCapacity < 0) { printf("\n[E] Error requesting capacity information.\n"); return 1; }
+	if (flashCapacity < 0) { printf("\n[E] Error requesting capacity information.\n"); goto exit_release; }
 	printf("%i byte(s) free.\n", flashCapacity);
 
 	if (flashCapacity < sourceFileStatus.st_size) {
 		printf("[E] There is not enough space to store your file.\n");
-		return 1;
+		goto exit_release;
 	}
 
 	int packetCount = ceil(sourceFileStatus.st_size/MAX_DATA_PAYLOAD) + 1;
@@ -83,11 +83,11 @@ int uploadFile(char* sourceFileName, char* destFileName, int throttleSetting) {
 	char *fData = calloc(MAX_DATA_PAYLOAD, sizeof(char));
 	char *sData = calloc(MAX_DATA_PAYLOAD*2, sizeof(char));
 	char *buffer = calloc((MAX_DATA_PAYLOAD*2)+18, sizeof(char));	// work buffer
-	if (fData == NULL || sData == NULL || buffer == NULL) { printf("[E] Error allocating memory."); goto exit; }
+	if (fData == NULL || sData == NULL || buffer == NULL) { printf("[E] Error allocating memory."); goto exit_unalloc; }
 
 	fx_sendFlashFileTransmission(usb_handle, buffer, sourceFileStatus.st_size, destFileName, "fls0");
 	ReadUSB(usb_handle, buffer, 6);
-	if (fx_getPacketType(buffer) != T_POSITIVE) { printf("[E] Unable to start transfer.\n"); goto exit; }
+	if (fx_getPacketType(buffer) != T_POSITIVE) { printf("[E] Unable to start transfer.\n"); goto exit_unalloc; }
 
 	// main transfer loop
 	printf("[");
@@ -99,7 +99,7 @@ int uploadFile(char* sourceFileName, char* destFileName, int throttleSetting) {
 		usleep(1000*throttleSetting);
 		if (resendCount > 2) {
 			printf("[E] Errors encountered during transmission.\n");
-			goto exit;
+			goto exit_unalloc;
 		}
 		resendCount++;
 		ret = fx_sendData(usb_handle, buffer, ST_FILE_TO_FLASH, packetCount, i+1, sData, escapedBytes);
@@ -115,9 +115,11 @@ int uploadFile(char* sourceFileName, char* destFileName, int throttleSetting) {
 	}
 	printf("]\n[I] File transfer completed.\n\n");
 	fx_sendComplete(usb_handle, buffer);
-    exit:
+exit_unalloc:
 	free(buffer);
 	free(sData);
 	free(fData);
+exit_release:	fx_releaseDeviceHandle(usb_handle);
+exit_closefile:	fclose(sourceFile);
 	return 0;
 }
