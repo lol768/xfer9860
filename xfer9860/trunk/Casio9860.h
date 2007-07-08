@@ -29,19 +29,18 @@
 #define C9860_PRODUCT_ID	0x6101
 
 // OFFSETS ////////////////////////////
-
-// for all packets
+// for all packets:
 #define OFF_T	0	/* for clarity */
 #define OFF_ST	1
 #define OFF_DF	3
 #define OFF_DS	4
 
-// for DATA packets
+// for DATA packets:
 #define OFF_TP	8
 #define OFF_PN	12
 #define OFF_DD	16
 
-// for COMMAND packets
+// for COMMAND packets:
 #define OFF_OW		8
 #define OFF_DT		10
 #define OFF_FS		12
@@ -52,8 +51,6 @@
 #define OFF_SD5		28
 #define OFF_SD6		30
 #define OFF_D1		32
-
-
 // END OFFSETS ////////////////////////
 
 //Types (subtypes actually) used for specifying what packet does.
@@ -83,6 +80,7 @@
 
 struct usb_dev_handle *fx_getDeviceHandle();
 int fx_initDevice(struct usb_dev_handle *usb_handle);
+void fx_releaseDeviceHandle(struct usb_dev_handle*);
 
 struct usb_device *device_init(void);
 

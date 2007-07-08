@@ -27,6 +27,7 @@
 #include "uploadfile.h"
 #include "downloadfile.h"
 #include "getinfo.h"
+#include "optimizememory.h"
 
 void displayHelp();
 void displayAbout();
@@ -45,7 +46,7 @@ int main(int argc, char *argv[]) {
 
 	printf("--- xfer9860 %s  Copyright (C) 2007 Andreas Bertheussen and Manuel Naranjo.\n", _VERSION_);
 
-	while ((opt = getopt(argc, argv, "t:u:d:iha")) != -1) {
+	while ((opt = getopt(argc, argv, "t:u:d:ioha")) != -1) {
 		switch(opt) {
 			case 't':
 				throttleSetting = atoi(optarg);
@@ -61,6 +62,9 @@ int main(int argc, char *argv[]) {
 				break;
 			case 'i':
 				getInfo(throttleSetting);
+				return 0;
+			case 'o':
+				optimizeMemory();
 				return 0;
 			case 'a':
 				displayAbout();
@@ -90,6 +94,7 @@ void displayHelp() {
 		" -d srcname\tDownload file `srcname' from device to `destname' on disk.\n"
 		"\t\tNote that this is significantly slower than uploading.\n"
 		" -i\t\tShows information about the connected calculator.\n"
+		" -o\t\tOptimize the storage memory (garbage collection).\n"
 		"\n"
 		"Parameters:\n"
 		" -t value\tThrottle setting. The value specifies the delay in ms between\n"
