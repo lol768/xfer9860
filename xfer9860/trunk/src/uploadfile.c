@@ -56,7 +56,7 @@ int uploadFile(char* sourceFileName, char* destFileName, int throttleSetting) {
 	if ((int)usb_handle == -1 || usb_handle == NULL) {
 		printf(	"\n[E] A listening device could not be found.\n"
 		      	"    Make sure it is receiving; press [ON], [MENU], [sin], [F2]\n");
-		goto exit_release;
+		goto exit_closefile;
 	}
 	if (fx_initDevice(usb_handle) < 0) {	// does calculator-specific setup
 		printf("\n[E] Error initializing device.\n"); goto exit_release;
