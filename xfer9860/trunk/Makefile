@@ -1,4 +1,4 @@
-OBJECTS=xfer9860.o Casio9860.o usbio.o uploadfile.o downloadfile.o getinfo.o
+OBJECTS=xfer9860.o Casio9860.o usbio.o uploadfile.o downloadfile.o getinfo.o optimizememory.o
 BIN=xfer9860
 LIB=-lusb -lm
 OPT=
@@ -17,6 +17,8 @@ getinfo.o: getinfo.c getinfo.h
 	cc -c getinfo.c -o getinfo.o ${OPT}
 downloadfile.o: downloadfile.c downloadfile.h Casio9860.h
 	cc -c downloadfile.c -o downloadfile.o ${OPT}
+optimizememory.o: optimizememory.c optimizememory.h Casio9860.h
+	cc -c optimizememory.c -o optimizememory.o ${OPT}
 
 clean:
 	-rm -f ${OBJECTS} ${BIN} *~
