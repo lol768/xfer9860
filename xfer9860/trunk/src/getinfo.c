@@ -33,32 +33,35 @@ int getInfo(int throttleSetting) {
 	if ((int)usb_handle == -1 || usb_handle == NULL) {
 		printf(	"\n[E] A listening device could not be found.\n"
 		      	"    Make sure it is receiving; press [ON], [MENU], [sin], [F2]\n");
-		return 1;
+		goto exit_unalloc;
 	}
 	if (fx_initDevice(usb_handle) < 0) {	// does calculator-specific setup
 		printf("\n[E] Error initializing device.\n");
 	}
 	printf("Connected!\n");
 	printf("[>] Verifying device.. ");
-	if (fx_doConnVer(usb_handle) != 0) { printf("Failed.\n"); return 1; }
+	if (fx_doConnVer(usb_handle) != 0) { printf("Failed.\n"); goto exit_release; }
 	else { printf("Done!\n"); }
 
 	usleep(1000*throttleSetting);
 	printf("[I] Main memory:");
 	int mcsCapacity = fx_getMCSCapacity(usb_handle);
-	if (mcsCapacity < 0) { printf("[E] Error requesting MCS capacity information.\n"); }
+	if (mcsCapacity < 0) { printf("[E] Error requesting MCS capacity information.\n"); goto exit_release; }
 	printf("\t%i%% available.\n", (mcsCapacity*100)/62928 );
 
 	usleep(1000*throttleSetting);
 	printf("[I] Storage memory:");
 	int flashCapacity = fx_getFlashCapacity(usb_handle, "fls0");
-	if (flashCapacity < 0) { printf("\n[E] Error requesting flash capacity information.\n"); return 1; }
+	if (flashCapacity < 0) { printf("\n[E] Error requesting flash capacity information.\n"); goto exit_release; }
 	printf("\t%i%% available.\n", (flashCapacity*100)/1572864);
 
 	usleep(1000*throttleSetting);
 	printf("[>] Closing connection.. ");
 	fx_sendComplete(usb_handle, buffer);
 	printf("Done!\n");
+exit_release:
+	fx_releaseDeviceHandle(usb_handle);
+exit_unalloc:
 	free(buffer);
 	return 0;
 }
