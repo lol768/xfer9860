@@ -1,7 +1,9 @@
 0.2:
-	Compiles and runs on MS Windows
-	
+	Rewritten codebase, allows command line parameters
+	File download support
+	Calculator information support (memory)
+	Memory optimization support
 
 0.1:
 	Initial Release
-	File transfer support
+	File upload support
