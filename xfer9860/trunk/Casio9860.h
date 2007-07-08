@@ -28,7 +28,36 @@
 #define C9860_VENDOR_ID		0x07CF
 #define C9860_PRODUCT_ID	0x6101
 
+// OFFSETS ////////////////////////////
+
+// for all packets
+#define OFF_T	0	/* for clarity */
+#define OFF_ST	1
+#define OFF_DF	3
+#define OFF_DS	4
+
+// for DATA packets
+#define OFF_TP	8
+#define OFF_PN	12
+#define OFF_DD	16
+
+// for COMMAND packets
+#define OFF_OW		8
+#define OFF_DT		10
+#define OFF_FS		12
+#define OFF_SD1		20
+#define OFF_SD2		22
+#define OFF_SD3		24
+#define OFF_SD4		26
+#define OFF_SD5		28
+#define OFF_SD6		30
+#define OFF_D1		32
+
+
+// END OFFSETS ////////////////////////
+
 //Types (subtypes actually) used for specifying what packet does.
+//the positive and negative subtypes only have 1 effective byte.
 #define POSITIVE_NORMAL		'0'
 #define POSITIVE_OVERWRITE	'1'
 #define POSITIVE_SYSINFO	'2'

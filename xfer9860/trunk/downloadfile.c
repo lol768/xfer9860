@@ -77,7 +77,7 @@ int downloadFile(char* sourceFileName, char* destFileName, int throttleSetting) 
 	// Read filesize from offset 12, 8 bytes
 	fx_sendPositive(usb_handle, buffer, POSITIVE_NORMAL);
 
-	fileSize = fx_asciiHexToInt(buffer+12, 8);
+	fileSize = fx_asciiHexToInt(buffer+OFF_FS, 8);
 	printf("\n[I] Got file transmission request, filesize is %i bytes.\n", fileSize);
 
 	// main receive loop
@@ -89,15 +89,16 @@ int downloadFile(char* sourceFileName, char* destFileName, int throttleSetting) 
 	while(1) { // receive loop
 
 		packetLength = readPacket(usb_handle, buffer);
-		dataLength = fx_asciiHexToInt(buffer+4, 4);
-		dataLength -= 8; // subtract the space for PN and TP to get length of raw data
+		// need checks on packet
+		dataLength = fx_asciiHexToInt(buffer+OFF_DS, 4);
+		dataLength -= 8; // subtract the space for PN and TP to get length of DD field
 
-		unescapedSize = fx_unescapeBytes(buffer+16, fData, dataLength); // unescaped data to fData
+		unescapedSize = fx_unescapeBytes(buffer+OFF_DD, fData, dataLength); // unescaped data to fData
 
 		dataWritten += fwrite(fData, 1, unescapedSize, destFile);
 		fx_sendPositive(usb_handle, buffer, POSITIVE_NORMAL);
-		totalCount = fx_asciiHexToInt( buffer+8, 4);
-		packetCount = fx_asciiHexToInt( buffer+12, 4);
+		totalCount = fx_asciiHexToInt( buffer+OFF_TP, 4);
+		packetCount = fx_asciiHexToInt( buffer+OFF_PN, 4);
 		if (i % 4 == 0) { printf("#"); fflush(stdout); } // indicates every 1kB
 		i++;
 		if (packetCount == totalCount) { // if this was last packet
