@@ -90,13 +90,15 @@ void displayHelp() {
 		" -d srcname\tDownload file `srcname' from device to `destname' on disk.\n"
 		"\t\tNote that this is significantly slower than uploading.\n"
 		" -i\t\tShows information about the connected calculator.\n"
-		"\nParameters:\n"
+		"\n"
+		"Parameters:\n"
 		" -t value\tThrottle setting. The value specifies the delay in ms between\n"
-	      	"\t\tpackets. Default is 0. Try increasing this in case of problems.\n"
-		"\nOther:\n"
+		"\t\tpackets. Default is 0. Try increasing this in case of problems.\n"
+		"\n"
+		"Other:\n"
 		" -h\t\tDisplay this help message.\n"
-	      	" -a\t\tDisplay info about xfer9860 and its licensing.\n");
-	printf("\n");
+		" -a\t\tDisplay info about xfer9860 and its licensing.\n"
+		"\n");
 }
 
 void displayAbout() {
@@ -104,11 +106,14 @@ void displayAbout() {
 		"This program is free software; you can redistribute it and/or\n"
 		"modify it under the terms of the GNU General Public License\n"
 		"as published by the Free Software Foundation; either version 2\n"
-		"of the License, or (at your option) any later version.\n\n"
+		"of the License, or (at your option) any later version.\n"
+		"\n"
 		"This program is distributed in the hope that it will be useful,\n"
 		"but WITHOUT ANY WARRANTY; without even the implied warranty of\n"
 		"MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n"
-		"GNU General Public License for more details.\n\n"
+		"GNU General Public License for more details.\n"
+		"\n"
 		"You should have received a copy of the GNU General Public License\n"
-		"along with this program. If not, see <http://www.gnu.org/licenses/>.\n");
+		"along with this program. If not, see <http://www.gnu.org/licenses/>.\n"
+		"\n");
 }

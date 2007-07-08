@@ -1,9 +1,10 @@
 OBJECTS=xfer9860.o Casio9860.o usbio.o uploadfile.o downloadfile.o getinfo.o
 BIN=xfer9860
+LIB=-lusb -lm
 OPT=
 
 ${BIN}: ${OBJECTS}
-	cc ${OBJECTS} -o xfer9860 -lusb -lm ${OPT}
+	cc ${OBJECTS} -o xfer9860 ${LIB} ${OPT}
 Casio9860.o: Casio9860.c Casio9860.h
 	cc -c Casio9860.c -o Casio9860.o ${OPT}
 xfer9860.o: xfer9860.c config.h

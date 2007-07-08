@@ -187,10 +187,10 @@ int fx_sendChange_Direction(struct usb_dev_handle *usb_handle, char *buffer) {
 int fx_sendFlash_Capacity_Request(struct usb_dev_handle *usb_handle, char *buffer, char *device) {
 	short int len = strlen(device);
 	memcpy(buffer, "\x01\x34\x42\x31", 4);
-	sprintf(buffer+4, "%04X", 24+len);
-	memcpy(buffer+8, "000000000000", 12);
-	sprintf(buffer+20, "00000000%02X00", len);
-	memcpy(buffer+32, device, len);
+	sprintf(buffer+OFF_DS, "%04X", 24+len);
+	memcpy(buffer+OFF_OW, "000000000000", 12); // includes OW, DT and FS
+	sprintf(buffer+OFF_SD1, "00000000%02X00", len);	// includes D1 - D6
+	memcpy(buffer+OFF_D1, device, len);
 
 	fx_appendChecksum(buffer, 32+len);
 
@@ -207,10 +207,10 @@ int fx_sendMCSCapacityRequest(struct usb_dev_handle *usb_handle, char *buffer) {
 int fx_sendFlashCollectGarbage(struct usb_dev_handle *usb_handle, char *buffer, char *device) {
 	short int len = strlen(device);
 	memcpy(buffer, "\x01\x35\x31\x31", 4);	// ST 51
-	sprintf(buffer+4, "%04X", 24+len);
-	memcpy(buffer+8, "000000000000", 12);
-	sprintf(buffer+20, "00000000%02X00", len);
-	memcpy(buffer+32, device, len);
+	sprintf(buffer+OFF_DS, "%04X", 24+len);
+	memcpy(buffer+OFF_OW, "000000000000", 12);
+	sprintf(buffer+OFF_SD1, "00000000%02X00", len);
+	memcpy(buffer+OFF_D1, device, len);
 
 	fx_appendChecksum(buffer, 32+len);
 
@@ -231,16 +231,11 @@ int fx_getFlashCapacity(struct usb_dev_handle *usb_handle, char *device) {
 	ReadUSB(usb_handle, buffer, 0x26);
 		if (fx_getPacketType(buffer) != T_COMMAND) { printf("ERR: fx_getFlashCapacity: no returned command\n"); return -1; }
 
-	char *tmp = calloc(9, sizeof(char));
-		if (tmp == NULL) { printf("ERR: fx_getFlashCapacity: alloc error\n"); return -1; }
-
-	memcpy(tmp, buffer+12, 8);	// got value
-	freeSize = strtol(tmp, NULL, 16);
+	freeSize = fx_asciiHexToInt(buffer+OFF_FS, 8); // free size is returned in FS
 
 	fx_sendPositive(usb_handle, buffer, POSITIVE_NORMAL);
 	ReadUSB(usb_handle, buffer, 6);
 
-	free(tmp);
 	free(buffer);
 
 	return freeSize; // converts 'hex-ascii' to int
@@ -257,16 +252,11 @@ int fx_getMCSCapacity(struct usb_dev_handle *usb_handle) {
 	ReadUSB(usb_handle, buffer, 0x26);
 		if (fx_getPacketType(buffer) != T_COMMAND) { printf("ERR: fx_getMCSCapacity: no returned command\n"); return -1; }
 
-	char *tmp = calloc(9, sizeof(char));
-		if (tmp == NULL) { printf("ERR: fx_getMCSCapacity: alloc error\n"); return -1; }
-
-	memcpy(tmp, buffer+12, 8);	// got value
-	freeSize = strtol(tmp, NULL, 16);
+	freeSize = fx_asciiHexToInt(buffer+OFF_FS, 8);
 
 	fx_sendPositive(usb_handle, buffer, POSITIVE_NORMAL);
 	ReadUSB(usb_handle, buffer, 6);
 
-	free(tmp);
 	free(buffer);
 
 	return freeSize;
@@ -276,11 +266,11 @@ int fx_sendFlashFileTransmission(struct usb_dev_handle *usb_handle, char *buffer
 	short int fnsize = strlen(filename);
 	short int devsize = strlen(device);
 	memcpy(buffer, "\x01\x34\x35\x31", 4); /* T, ST = 45, DF */
-	sprintf(buffer+4, "%04X", 24+fnsize+devsize);
-	memcpy(buffer+8, "0280", 4); /* OW, DT */
-	sprintf(buffer+12, "%08X", filesize); /* FS   8 byte*/
-	sprintf(buffer+20, "00%02X0000%02X00", fnsize, devsize); /* DS1 - DS6 (12b)*/
-	sprintf(buffer+32, "%s%s", filename, device);
+	sprintf(buffer+OFF_DS, "%04X", 24+fnsize+devsize);
+	memcpy(buffer+OFF_OW, "0280", 4); /* OW, DT */
+	sprintf(buffer+OFF_FS, "%08X", filesize); /* FS   8 byte*/
+	sprintf(buffer+OFF_SD1, "00%02X0000%02X00", fnsize, devsize); /* SD1 - SD6, 12b*/
+	sprintf(buffer+OFF_D1, "%s%s", filename, device);
 
 	fx_appendChecksum(buffer, 32+fnsize+devsize);
 
@@ -291,11 +281,11 @@ int fx_sendFlashFileTransmissionRequest(struct usb_dev_handle *usb_handle, char*
 	short int fnsize = strlen(filename);
 	short int devsize = strlen(device);
 	memcpy(buffer, "\x01\x34\x34\x31", 4); /* T, ST = 44, DF */
-	sprintf(buffer+4, "%04X", 24+fnsize+devsize);
-	memcpy(buffer+8, "0000", 4); /* OW, DT */
-	sprintf(buffer+12, "00000000"); /* FS   8 byte*/
-	sprintf(buffer+20, "00%02X0000%02X00", fnsize, devsize); // DS2 and DS5 are in use, no folder support yet
-	sprintf(buffer+32, "%s%s", filename, device);
+	sprintf(buffer+OFF_DS, "%04X", 24+fnsize+devsize);
+	memcpy(buffer+OFF_OW, "0000", 4); /* OW, DT */
+	sprintf(buffer+OFF_FS, "00000000"); /* FS   8 byte*/
+	sprintf(buffer+OFF_SD1, "00%02X0000%02X00", fnsize, devsize); // SD2 and SD5 are in use, no folder support yet
+	sprintf(buffer+OFF_D1, "%s%s", filename, device);
 
 	fx_appendChecksum(buffer, 32+fnsize+devsize);
 
@@ -305,9 +295,9 @@ int fx_sendFlashFileTransmissionRequest(struct usb_dev_handle *usb_handle, char*
 int fx_sendData(struct usb_dev_handle *usb_handle, char *buffer, char* subtype, int total, int number, char *data, int length) {
 	memcpy(buffer, "\x02\x00\x00\x31", 4); // T, DF, leaves a hole for ST
 	 memcpy(buffer+1, subtype, 2); // ST
-	sprintf(buffer+4, "%04X", 8+length); // DS, 4 b
-	sprintf(buffer+8, "%04X%04X", total, number);
-	memcpy(buffer+16, data, length);
+	sprintf(buffer+OFF_DS, "%04X", 8+length); // DS, 4 b
+	sprintf(buffer+OFF_TP, "%04X%04X", total, number);
+	memcpy(buffer+OFF_DD, data, length);
 
 	fx_appendChecksum(buffer, 16+length);
 	return WriteUSB(usb_handle, buffer, 18+length);
