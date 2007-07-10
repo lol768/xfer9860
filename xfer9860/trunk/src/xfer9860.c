@@ -44,7 +44,7 @@ int main(int argc, char *argv[]) {
 	int downloadFileFlag = 0;
 	int getInfoFlag = 0;
 
-	printf("--- xfer9860 %s  Copyright (C) 2007 Andreas Bertheussen and Manuel Naranjo.\n", _VERSION_);
+	printf("--- xfer9860 %s  Copyright (C) 2007 Andreas Bertheussen and Manuel Naranjo.\n", VERSION);
 
 	while ((opt = getopt(argc, argv, "t:u:d:ioha")) != -1) {
 		switch(opt) {
