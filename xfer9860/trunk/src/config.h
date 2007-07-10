@@ -21,11 +21,10 @@
 
 #ifndef CONFIG_H
 #define CONFIG_H
-// common include-file with program-wide definitions
 
-#define _VERSION_ "SVN"
-
-//#define __DEBUG__	// not in use atm
-#define __SNOOP__
+// leave as-is, scons takes care of this
+#ifndef VERSION
+  #define VERSION "SVN"
+#endif
 
 #endif
