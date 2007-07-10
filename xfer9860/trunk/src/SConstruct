@@ -1,0 +1,57 @@
+########################################
+# Easy-access build variables
+version = 'v0.2'
+ccflags = '-O2 -pipe -fomit-frame-pointer'
+liblist	= Split('m usb')
+srclist	 = Split('uploadfile.c downloadfile.c getinfo.c optimizememory.c usbio.c Casio9860.c')
+
+default_env = Environment( CCFLAGS = ccflags)
+
+########################################
+# Checks for required libs and includes
+#
+if not default_env.GetOption('clean'): # don't perform on clean
+	print '==== Looking for required libraries ===='
+	conf = Configure(default_env)
+	# libraries with their headers
+	if not conf.CheckLibWithHeader('usb', 'usb.h', 'C') \
+	or not conf.CheckLibWithHeader('m', 'math.h', 'C') \
+	:
+		print 'Did not find the needed libraries or headers, exiting!'
+		Exit(1)
+	# general headers
+	print '\n==== Looking for required includes ===='
+	if not conf.CheckCHeader('unistd.h') \
+	or not conf.CheckCHeader('stdio.h') \
+	or not conf.CheckCHeader('string.h') \
+	or not conf.CheckCHeader('stdlib.h') \
+	or not conf.CheckCHeader('sys/types.h') \
+	or not conf.CheckCHeader('sys/stat.h') \
+	:
+		print 'Did not find needed includes, exiting!'
+		Exit(1)
+	
+	default_env = conf.Finish()
+
+print ''
+########################################
+# Enable macro def's in case of debug or snoop mode
+#
+debug = ARGUMENTS.get('debug', 0)
+if int(debug):
+	print '==== Compiling in DEBUG/SNOOP MODE! ===='
+	default_env.Append(CPPDEFINES = Split('DEBUG SNOOP'))
+
+########################################
+# xfer9860.c expects its version to be defined at compile-time
+#
+versioned = default_env.Copy()
+versioned.Append(CPPDEFINES = r'VERSION=\"' + version + r'\"')
+
+objlist = versioned.Object('xfer9860.c')
+
+if not default_env.GetOption('clean'):
+	print '==== Starting program compilation ===='
+xfer9860 = default_env.Program(target = 'xfer9860', source = srclist + objlist, LIBS = liblist)
+Default(xfer9860)
+
