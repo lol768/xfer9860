@@ -4,8 +4,9 @@ All you need to compile the sources is libusb and SCons (requires python). To
 compile, run:
   $ scons -Q
 
-The executable is located in `src/', and can be run with:	
+The executable is located in `src/', and can be run with:
   $ src/xfer9860
+Depending on the distribution, you might have to run xfe9860 as root.
 
 To clean up (everything) after the compilation, run:
   $ scons -c
