@@ -28,6 +28,8 @@
 #include <usb.h>
 
 #include "Casio9860.h"
+#include "usbio.h"
+#include "config.h"
 
 int uploadFile(char* sourceFileName, char* destFileName, int throttleSetting) {
 	int ret = 0, i;
@@ -80,9 +82,9 @@ int uploadFile(char* sourceFileName, char* destFileName, int throttleSetting) {
 	int packetCount = ceil(sourceFileStatus.st_size/MAX_DATA_PAYLOAD) + 1;
 	printf("\n[>] Starting transfer of %s to fls0, %i b, %i packets..\n",
 	       destFileName, sourceFileStatus.st_size, packetCount);
-	char *fData = calloc(MAX_DATA_PAYLOAD, sizeof(char));
-	char *sData = calloc(MAX_DATA_PAYLOAD*2, sizeof(char));
-	char *buffer = calloc((MAX_DATA_PAYLOAD*2)+18, sizeof(char));	// work buffer
+	char *fData = (char*)calloc(MAX_DATA_PAYLOAD, sizeof(char));
+	char *sData = (char*)calloc(MAX_DATA_PAYLOAD*2, sizeof(char));
+	char *buffer = (char*)calloc((MAX_DATA_PAYLOAD*2)+18, sizeof(char));	// work buffer
 	if (fData == NULL || sData == NULL || buffer == NULL) { printf("[E] Error allocating memory."); goto exit_unalloc; }
 
 	fx_sendFlashFileTransmission(usb_handle, buffer, sourceFileStatus.st_size, destFileName, "fls0");
@@ -96,7 +98,7 @@ int uploadFile(char* sourceFileName, char* destFileName, int throttleSetting) {
 		readBytes = fread(fData, 1, MAX_DATA_PAYLOAD, sourceFile);
 		escapedBytes = fx_escapeBytes(fData, sData, readBytes);
 	resend_data:
-		usleep(1000*throttleSetting);
+		MSLEEP(throttleSetting);
 		if (resendCount > 2) {
 			printf("[E] Errors encountered during transmission.\n");
 			goto exit_unalloc;
