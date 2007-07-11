@@ -100,9 +100,13 @@ if ARGUMENTS.get('dist', 0):
 if ARGUMENTS.get('distpack', 0):
 	import os
 	os.system('rm -rf /tmp/%s-%s.tar.bz2' % (dist, version)) # delete old packages
-	if not os.path.exists('/tmp/%s-%s/bin/' % (dist, version)):
-		print '!!! Could not find directory, remember to make with dist=1 first!'
+	if not os.path.exists('/tmp/%s-%s/' % (dist, version)):
+		print '!!! Could not find dist directory. Remember to dist first.'
 		Exit()
+	if ARGUMENTS.get('bin', 0) and not os.path.exists('/tmp/%s-%s/bin/' % (dist, version)):
+		print '!!! Could not find bin directory, compile and dist with bin=1!'
+		Exit()
+
 	print 'Archiving distribution into /tmp/%s-%s.tar.bz2...' % (dist, version)
 	os.system('tar -cjf /tmp/%s-%s.tar.bz2 -C /tmp %s-%s/' % (dist, version, dist, version) )
 	print 'Done.'
