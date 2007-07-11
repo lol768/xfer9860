@@ -1,13 +1,12 @@
-= Install instructions =========================================================
+= Compiling from source ========================================================
 
-There are no formal methods right now to install xfer9860. The only dependency
-is the usblib-library. To compile the source code, enter `src/' and run:
+All you need to compile the sources is libusb and SCons (requires python). To
+compile, run:
+  $ scons -Q
 
-	make
+The executable is located in `src/', and can be run with:	
+  $ src/xfer9860
 
-And wait a few seconds. You can run the new executable `xfer9860' to view usage
-instructions.
+To clean up (everything) after the compilation, run:
+  $ scons -c
 
-	./xfer9860
-
-If this does not work for some reason, you can try the binary located in `bin/'.

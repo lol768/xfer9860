@@ -1,9 +1,11 @@
 0.2:
-	Rewritten codebase, allows command line parameters
-	File download support
-	Calculator information support (memory)
-	Memory optimization support
+	* Rewritten codebase, allows command line parameters
+	* File download support
+	* Calculator information support
+	* Flash optimization command added
+	* Memory optimization support
+	* New SCons-based build system
 
 0.1:
-	Initial Release
-	File upload support
+	* Initial Release
+	* File upload support
