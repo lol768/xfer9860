@@ -105,7 +105,7 @@ int fx_sendData(struct usb_dev_handle*, char*, char*, int, int, char*, int);
 int fx_getPacketType(char*);
 
 // Service functions
-int fx_append_Checksum(char*, int);
+int fx_appendChecksum(char*, int);
 int fx_escapeBytes(char*, char*, int);
 int fx_unescapeBytes(char *, char*, int);
 long int fx_asciiHexToInt(char *, int);

@@ -24,6 +24,8 @@
 #include <string.h>
 
 #include "Casio9860.h"
+#include "usbio.h"
+#include "config.h"
 
 int readPacket(struct usb_dev_handle *usb_handle, char *buffer) {
 	// This basically works by receiving until all data has been read, because
@@ -44,8 +46,8 @@ int downloadFile(char* sourceFileName, char* destFileName, int throttleSetting) 
 	FILE *destFile = fopen(destFileName, "w");
 	if (destFile == NULL) { printf("[E] Cannot open file for writing.\n"); return 1; }
 
-	char* buffer =	calloc((MAX_DATA_PAYLOAD*2)+18, sizeof(char));
-	char* fData =	calloc((MAX_DATA_PAYLOAD*2)+18, sizeof(char));
+	char* buffer =	(char*)calloc((MAX_DATA_PAYLOAD*2)+18, sizeof(char));
+	char* fData =	(char*)calloc((MAX_DATA_PAYLOAD*2)+18, sizeof(char));
 
 	if (fData == NULL || buffer == NULL) { printf("[E] Error allocating memory\n"); goto exit_unalloc; }
 
@@ -104,7 +106,7 @@ int downloadFile(char* sourceFileName, char* destFileName, int throttleSetting) 
 		if (packetCount == totalCount) { // if this was last packet
 			break;
 		}
-		usleep(1000*throttleSetting);
+		MSLEEP(throttleSetting);
 	}
 
 	ReadUSB(usb_handle, buffer, 6);

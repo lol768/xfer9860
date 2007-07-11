@@ -27,4 +27,12 @@
   #define VERSION "SVN"
 #endif
 
+#ifndef WIN32
+ #include <unistd.h>
+ #define MSLEEP(s)	usleep((s)*1000)
+#else
+ #include <windows.h>
+#define MSLEEP(s)	Sleep(s)
+#endif
+
 #endif

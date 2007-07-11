@@ -25,6 +25,7 @@
 #include <string.h>
 
 #include "Casio9860.h"
+#include "usbio.h"
 
 struct usb_dev_handle* fx_getDeviceHandle() {
 	int ret = 0;
@@ -82,7 +83,7 @@ struct usb_device *device_init(void) {
 int fx_initDevice(struct usb_dev_handle *usb_handle) {
 	int ret;
 	char* buffer;
-	buffer = calloc(0x29, sizeof(char));
+	buffer = (char*)calloc(0x29, sizeof(char));
 
 	ret = usb_control_msg(usb_handle, 0x80, 0x6, 0x100, 0, buffer, 0x12, 200);
 	debug(1, buffer, ret);
@@ -128,7 +129,7 @@ int fx_sendVerify(struct usb_dev_handle *usb_handle, char *buffer, char *type) {
 }
 
 int fx_doConnVer(struct usb_dev_handle *usb_handle) {
-	char *buffer = calloc(6, sizeof(char));
+	char *buffer = (char*)calloc(6, sizeof(char));
 	if (buffer == NULL) {"ERR: fx_doConnVer(): allocation failed.\n";}
 	fx_sendVerify(usb_handle, buffer, "00");	// sends connver for start of communication
 	ReadUSB(usb_handle, buffer, 6);
@@ -225,7 +226,7 @@ int fx_sendFlashCollectGarbage(struct usb_dev_handle *usb_handle, char *buffer, 
 
 int fx_getFlashCapacity(struct usb_dev_handle *usb_handle, char *device) {
 	int freeSize = 0;
-	char * buffer = calloc(40,sizeof(char));
+	char * buffer = (char*)calloc(40,sizeof(char));
 		if (buffer == NULL) { printf("ERR: fx_getFlashCapacity: alloc error\n"); return -1; }
 
 	fx_sendFlash_Capacity_Request(usb_handle, buffer, device);
@@ -248,7 +249,7 @@ int fx_getFlashCapacity(struct usb_dev_handle *usb_handle, char *device) {
 
 int fx_getMCSCapacity(struct usb_dev_handle *usb_handle) {
 	int freeSize = 0;
-	char * buffer = calloc(40,sizeof(char));
+	char * buffer = (char*)calloc(40,sizeof(char));
 	fx_sendMCSCapacityRequest(usb_handle, buffer);
 	ReadUSB(usb_handle, buffer, 6);
 		if (fx_getPacketType(buffer) != T_POSITIVE) { printf("ERR: fx_getMCShCapacity: no proper response\n"); return -1; }
@@ -371,7 +372,7 @@ int fx_escapeBytes(char *source, char *dest, int length) {
 }
 
 long int fx_asciiHexToInt(char *source, int length) {
-	char *tmp = calloc(length+1, sizeof(char));
+	char *tmp = (char*)calloc(length+1, sizeof(char));
 	memcpy(tmp, source, length); tmp[length] = 0; // using the extra byte for null-termination
 	int value = strtol(tmp, NULL, 16);
 	free(tmp);
