@@ -37,13 +37,12 @@ int main(int argc, char *argv[]) {
 	int opt;
 
 	/* parameters */
-	char *sourceFileName;
+	char *sourceFileName = NULL;
 	int throttleSetting = 0;
 
 	/* operations */
 	int uploadFileFlag = 0;
 	int downloadFileFlag = 0;
-	int getInfoFlag = 0;
 
 	printf("--- xfer9860 %s  Copyright (C) 2007 Andreas Bertheussen and Manuel Naranjo.\n", VERSION);
 

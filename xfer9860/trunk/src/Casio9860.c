@@ -130,7 +130,7 @@ int fx_sendVerify(struct usb_dev_handle *usb_handle, char *buffer, char *type) {
 
 int fx_doConnVer(struct usb_dev_handle *usb_handle) {
 	char *buffer = (char*)calloc(6, sizeof(char));
-	if (buffer == NULL) {"ERR: fx_doConnVer(): allocation failed.\n";}
+	if (buffer == NULL) {printf("ERR: fx_doConnVer(): allocation failed.\n");}
 	fx_sendVerify(usb_handle, buffer, "00");	// sends connver for start of communication
 	ReadUSB(usb_handle, buffer, 6);
 	if (fx_getPacketType(buffer) == T_POSITIVE) {// assuming the positive response is 'plain'
@@ -150,9 +150,6 @@ int fx_sendTerminate(struct usb_dev_handle *usb_handle, char *buffer) {
 }
 
 int fx_sendPositive(struct usb_dev_handle *usb_handle, char *buffer, char type) {
-	int i;
-	char sum;
-
 	/* Type: 0x06
 	 * ST: given as argument */
 	memcpy(buffer, "\x06\x30\x30\x30", 4);
@@ -172,9 +169,6 @@ int fx_getPacketType(char *buffer) {
 }
 
 int fx_sendNegative(struct usb_dev_handle *usb_handle, char *buffer, char type) {
-	int i;
-	char sum;
-
 	/* Type 0x05
 	 * ST: given as argument */
 	memcpy(buffer, "\x05\x30\x30\x30", 4);

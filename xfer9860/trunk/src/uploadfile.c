@@ -50,7 +50,7 @@ int uploadFile(char* sourceFileName, char* destFileName, int throttleSetting) {
 
 	struct stat sourceFileStatus;
 	stat(sourceFileName, &sourceFileStatus);
-	printf("[I] File size:  %i byte(s)\n", sourceFileStatus.st_size);
+	printf("[I] File size:  %i byte(s)\n", (int)sourceFileStatus.st_size);
 
 	printf("[>] Setting up USB connection.. ");
 	struct usb_dev_handle *usb_handle;
@@ -81,7 +81,7 @@ int uploadFile(char* sourceFileName, char* destFileName, int throttleSetting) {
 
 	int packetCount = ceil(sourceFileStatus.st_size/MAX_DATA_PAYLOAD) + 1;
 	printf("\n[>] Starting transfer of %s to fls0, %i b, %i packets..\n",
-	       destFileName, sourceFileStatus.st_size, packetCount);
+	       destFileName, (int)sourceFileStatus.st_size, packetCount);
 	char *fData = (char*)calloc(MAX_DATA_PAYLOAD, sizeof(char));
 	char *sData = (char*)calloc(MAX_DATA_PAYLOAD*2, sizeof(char));
 	char *buffer = (char*)calloc((MAX_DATA_PAYLOAD*2)+18, sizeof(char));	// work buffer
