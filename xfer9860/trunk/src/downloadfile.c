@@ -34,7 +34,9 @@ int readPacket(struct usb_dev_handle *usb_handle, char *buffer) {
 	// read correctly, but at the same time allows short waiting if no data is ready.
 	int pos = 0, read = 0;
 	do {
-		read = ReadUSB(usb_handle, buffer+pos, ((MAX_DATA_PAYLOAD*2)+18)-pos);
+		read = usb_bulk_read(usb_handle, 0x82, buffer+pos, ((MAX_DATA_PAYLOAD*2)+18)-pos, 40);
+
+		/*read = ReadUSB(usb_handle, buffer+pos, ((MAX_DATA_PAYLOAD*2)+18)-pos);*/
 		pos += read;
 	} while (read > 0);
 
