@@ -5,8 +5,12 @@ You can find new releases, our forum, tracker and most other things at:
 
 	http://sourceforge.net/projects/xfer9860
 
-Installation instructions can be found in the INSTALL file.
-Note that file download works, but is _very slow_ compared to upload.
+The projects website (also hosted by sf.net) is located at:
+
+	http://xfer9860.sourceforge.net/
+
+Installation/usage instructions for xfer9860 can be found in the INSTALL file.
+Note that file download only works reliably on small files, up to a few 100kB.
 
 If you have time, give me feedback at <andreasmarcel@gmail.com> and tell me what
 could be better, or what you like!
@@ -31,6 +35,7 @@ v0.1 was released.
 
 = Thanks to ===================================================================
 
+Robert Pechfelder <CFX_Pechi@gmx.de> for testing of the release.
 The libusb project <http://libusb.sourceforge.net> for the nice API.
 Greg Kroah-Hartman <greg@kroah.com> for initial usb code.
 Casio Kingdom <www.casiokingdom.org>

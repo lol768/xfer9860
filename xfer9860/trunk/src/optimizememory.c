@@ -43,7 +43,7 @@ int optimizeMemory() {
 
 	char* buffer = (char*)calloc(0x40, sizeof(char));
 	if (buffer == NULL) { printf("[E] Memory allocation error.\n"); goto exit_release; }
-	printf("[>] Requesting optimization of storage memory..");
+	printf("[>] Requesting optimization of storage memory..\n");
 	fx_sendFlashCollectGarbage(usb_handle, buffer, "fls0");
 	fx_sendComplete(usb_handle, buffer);
 
