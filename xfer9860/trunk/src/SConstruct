@@ -45,7 +45,7 @@
 version = '0.2'
 dist = 'xfer9860'
 bindist = 'xfer9860-bin' # only used to set dist in case of bin-mode
-ccflags = '-O2 -pipe -fomit-frame-pointer -Wall'
+ccflags = '-O2 -pipe -fomit-frame-pointer -Wall -pedantic'
 liblist	= Split('usb')
 srclist	 = Split('uploadfile.c downloadfile.c getinfo.c optimizememory.c usbio.c Casio9860.c')
 default_env = Environment( CCFLAGS = ccflags)
@@ -135,7 +135,7 @@ if not default_env.GetOption('clean'): # don't perform on clean
 	:
 		print 'Did not find needed includes, exiting!'
 		Exit(1)
-	
+
 	default_env = conf.Finish()
 
 print ''
