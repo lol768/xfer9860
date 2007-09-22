@@ -95,8 +95,8 @@ void displayHelp() {
 		"\t\tNote that this is significantly slower than uploading.\n"
 		" -i\t\tShows information about the connected calculator.\n"
 		" -o\t\tOptimize the storage memory (garbage collection).\n"
-		"\n"
-		"Parameters:\n"
+		"\n");
+	printf(	"Parameters:\n"
 		" -t value\tThrottle setting. The value specifies the delay in ms between\n"
 		"\t\tpackets. Default is 0. Try increasing this in case of problems.\n"
 		"\n"
