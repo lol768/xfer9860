@@ -67,7 +67,7 @@ void debug(int input, char* array, int len){
 	}
 
 	fprintf(stderr,"\n\n");
-#endif //SNOOP
+#endif /* SNOOP */
 }
 
 int ReadUSB(struct usb_dev_handle *usb_handle, char *buffer, int length) {
