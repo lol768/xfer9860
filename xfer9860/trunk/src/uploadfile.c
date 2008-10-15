@@ -32,7 +32,10 @@
 #include "config.h"
 
 int uploadFile(char* sourceFileName, char* destFileName, int throttleSetting) {
-	int ret = 0, i;
+	int ret = 0, i, destFileNameLength, flashCapacity, packetCount;
+	char *fData, *sData, *buffer;
+	struct stat sourceFileStatus;
+	struct usb_dev_handle *usb_handle;
 
 	FILE *sourceFile = fopen(sourceFileName, "rb");
 	if (sourceFile == NULL) {
@@ -41,26 +44,24 @@ int uploadFile(char* sourceFileName, char* destFileName, int throttleSetting) {
         }
 	printf("[I] Found file: %s\n", sourceFileName);
 
-	int destFileNameLength = strlen(destFileName);
+	destFileNameLength = strlen(destFileName);
 	if (destFileNameLength > 12) {
 		printf(	"[E] The destination filename: %s\n"
 			"     is too long. Filesystem only supports 12 characters.\n", destFileName);
 		goto exit_closefile;
 	}
 
-	struct stat sourceFileStatus;
 	stat(sourceFileName, &sourceFileStatus);
 	printf("[I] File size:  %i byte(s)\n", (int)sourceFileStatus.st_size);
 
 	printf("[>] Setting up USB connection.. ");
-	struct usb_dev_handle *usb_handle;
-	usb_handle = fx_getDeviceHandle();	// initiates usb system
-	if ((int)usb_handle == -1 || usb_handle == NULL) {
+	usb_handle = fx_getDeviceHandle();	/* initiates usb system */
+	if (usb_handle == NULL) {
 		printf(	"\n[E] A listening device could not be found.\n"
 		      	"    Make sure it is receiving; press [ON], [MENU], [sin], [F2]\n");
 		goto exit_closefile;
 	}
-	if (fx_initDevice(usb_handle) < 0) {	// does calculator-specific setup
+	if (fx_initDevice(usb_handle) < 0) {	/* does calculator-specific setup */
 		printf("\n[E] Error initializing device.\n"); goto exit_release;
 	}
 	printf("Connected!\n");
@@ -70,7 +71,7 @@ int uploadFile(char* sourceFileName, char* destFileName, int throttleSetting) {
 	else { printf("Done!\n"); }
 
 	printf("[>] Requesting fls0 capacity.. ");
-	int flashCapacity = fx_getFlashCapacity(usb_handle, "fls0");
+	flashCapacity = fx_getFlashCapacity(usb_handle, "fls0");
 	if (flashCapacity < 0) { printf("\n[E] Error requesting capacity information.\n"); goto exit_release; }
 	printf("%i byte(s) free.\n", flashCapacity);
 
@@ -78,20 +79,20 @@ int uploadFile(char* sourceFileName, char* destFileName, int throttleSetting) {
 		printf("[E] There is not enough space to store your file.\n");
 		goto exit_release;
 	}
-
-	int packetCount = ceil(sourceFileStatus.st_size/MAX_DATA_PAYLOAD) + 1;
+	
+	packetCount = ceil(sourceFileStatus.st_size/MAX_DATA_PAYLOAD) + 1;
 	printf("\n[>] Starting transfer of %s to fls0, %i b, %i packets..\n",
 	       destFileName, (int)sourceFileStatus.st_size, packetCount);
-	char *fData = (char*)calloc(MAX_DATA_PAYLOAD, sizeof(char));
-	char *sData = (char*)calloc(MAX_DATA_PAYLOAD*2, sizeof(char));
-	char *buffer = (char*)calloc((MAX_DATA_PAYLOAD*2)+18, sizeof(char));	// work buffer
+	fData = (char*)calloc(MAX_DATA_PAYLOAD, sizeof(char));
+	sData = (char*)calloc(MAX_DATA_PAYLOAD*2, sizeof(char));
+	buffer = (char*)calloc((MAX_DATA_PAYLOAD*2)+18, sizeof(char));	/* work buffer */
 	if (fData == NULL || sData == NULL || buffer == NULL) { printf("[E] Error allocating memory."); goto exit_unalloc; }
 
 	fx_sendFlashFileTransmission(usb_handle, buffer, sourceFileStatus.st_size, destFileName, "fls0");
 	ReadUSB(usb_handle, buffer, 6);
 	if (fx_getPacketType(buffer) != T_POSITIVE) { printf("[E] Unable to start transfer.\n"); goto exit_unalloc; }
 
-	// main transfer loop
+	/* main transfer loop */
 	printf("[");
 	for (i = 0; i < packetCount; i++) {
 		int resendCount = 0, readBytes = 0, escapedBytes = 0;
@@ -105,12 +106,12 @@ int uploadFile(char* sourceFileName, char* destFileName, int throttleSetting) {
 		}
 		resendCount++;
 		ret = fx_sendData(usb_handle, buffer, ST_FILE_TO_FLASH, packetCount, i+1, sData, escapedBytes);
-		if (i % 4 == 0) { printf("#"); fflush(stdout); } // indicates every 1kB
+		if (i % 4 == 0) { printf("#"); fflush(stdout); } /* indicates every 1kB */
 		if (ReadUSB(usb_handle, buffer, 6) == 0) {
 			printf("ERR: Got no response, retrying.\n");
 			goto resend_data;
 		}
-		if (memcmp(buffer, "\x15\x30\x31", 3) == 0) {	// ugly way
+		if (memcmp(buffer, "\x15\x30\x31", 3) == 0) {	/* ugly way */
 			printf("ERR: Got retransmission request, retrying.\n");
 			goto resend_data;
 		}

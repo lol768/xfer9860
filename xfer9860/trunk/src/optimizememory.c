@@ -24,15 +24,16 @@
 #include "Casio9860.h"
 
 int optimizeMemory() {
-	printf("[>] Setting up USB connection.. ");
 	struct usb_dev_handle *usb_handle;
-	usb_handle = fx_getDeviceHandle();	// initiates usb system
-	if ((int)usb_handle == -1 || usb_handle == NULL) {
+	char* buffer = (char*)calloc(0x40, sizeof(char)); /* Used for misc packet data */
+	printf("[>] Setting up USB connection.. ");
+	usb_handle = fx_getDeviceHandle();	/* initiates usb system */
+	if (usb_handle == NULL) {
 		printf(	"\n[E] A listening device could not be found.\n"
 		      	"    Make sure it is receiving; press [ON], [MENU], [sin], [F2]\n");
 		return 1;
 	}
-	if (fx_initDevice(usb_handle) < 0) {	// does calculator-specific setup
+	if (fx_initDevice(usb_handle) < 0) {	/* does calculator-specific setup */
 		printf("\n[E] Error initializing device.\n"); goto exit_release;
 	}
 	printf("Connected!\n");
@@ -41,7 +42,6 @@ int optimizeMemory() {
 	if (fx_doConnVer(usb_handle) != 0) { printf("Failed.\n"); goto exit_release; }
 	else { printf("Done!\n"); }
 
-	char* buffer = (char*)calloc(0x40, sizeof(char));
 	if (buffer == NULL) { printf("[E] Memory allocation error.\n"); goto exit_release; }
 	printf("[>] Requesting optimization of storage memory..\n");
 	fx_sendFlashCollectGarbage(usb_handle, buffer, "fls0");

@@ -42,11 +42,11 @@
 ########################################
 # Easy-access build variables
 #
-version = '0.2'
+version = '0.2.1'
 dist = 'xfer9860'
 bindist = 'xfer9860-bin' # only used to set dist in case of bin-mode
 ccflags = '-O2 -pipe -fomit-frame-pointer -Wall -pedantic'
-liblist	= Split('usb')
+liblist	= Split('usb m')
 srclist	 = Split('uploadfile.c downloadfile.c getinfo.c optimizememory.c usbio.c Casio9860.c')
 default_env = Environment( CCFLAGS = ccflags)
 
@@ -56,7 +56,7 @@ default_env = Environment( CCFLAGS = ccflags)
 if ARGUMENTS.get('bin', 0):
 	print '!!! You are building a binary release (static linked). NOT'
 	print '!!! recommended for normal users. If you want to distribute the'
-	print '!!! binaryy, you must include sources for libusb, to comply with'
+	print '!!! binary, you must include sources for libusb, to comply with'
 	print '!!! libusb\'s licensing (LGPL)'
 	default_env.Append(LINKFLAGS = '-static')
 	dist = bindist
@@ -151,7 +151,7 @@ if int(debug):
 # xfer9860.c expects its version to be defined at compile-time.
 # create a new environment for it, and modify it
 #
-versioned = default_env.Copy()
+versioned = default_env.Clone()
 versioned.Append(CPPDEFINES = r'VERSION=\"v' + version + r'\"')
 objlist = versioned.Object('xfer9860.c')
 

@@ -82,7 +82,7 @@ int main(int argc, char *argv[]) {
 	if (uploadFileFlag) { uploadFile(sourceFileName, argv[optind], throttleSetting);	return 0; }
 	if (downloadFileFlag) { downloadFile(sourceFileName, argv[optind], throttleSetting);	return 0; }
 
-	displayHelp(); // default action if none of the above are catched
+	displayHelp(); /* default action if none of the above are catched */
 	return 0;
 }
 
@@ -112,8 +112,8 @@ void displayAbout() {
 		"modify it under the terms of the GNU General Public License\n"
 		"as published by the Free Software Foundation; either version 2\n"
 		"of the License, or (at your option) any later version.\n"
-		"\n"
-		"This program is distributed in the hope that it will be useful,\n"
+		"\n");
+	printf(	"This program is distributed in the hope that it will be useful,\n"
 		"but WITHOUT ANY WARRANTY; without even the implied warranty of\n"
 		"MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n"
 		"GNU General Public License for more details.\n"
