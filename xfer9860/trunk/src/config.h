@@ -22,7 +22,7 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-// leave as-is, scons takes care of this
+/* leave as-is, scons takes care of this */
 #ifndef VERSION
   #define VERSION "SVN"
 #endif
