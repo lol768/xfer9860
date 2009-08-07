@@ -9,6 +9,7 @@ extern unsigned int fx_debugLevel;
 		snprintf(fx_messageString, sizeof(fx_messageString)-1, format, ##args);	\
 		if (level <= fx_debugLevel)	\
 			fprintf(stderr, "DBG(%i): %s\n", level, fx_messageString);	\
+		fflush(stderr);	\
 	} while(0);
 
 #endif /* LOG_H */

@@ -137,10 +137,10 @@ int fx_releaseDevice(struct usb_dev_handle *deviceHandle, int disconnectOptions)
 int fx_write(struct usb_dev_handle *deviceHandle, char *buffer, int length) {
 	int ret = 0;
 	/* Optional debugging */
-	FX_LOG(2, "Calling %s() with %i bytes of data:", __func__, length)
+	FX_LOG(2, "%s: %i bytes of data:", __func__, length)
 	if (2 <= fx_debugLevel) { fx_printData(buffer, length, 16, 0); }
 	fflush(stderr);
-	ret = usb_bulk_write(deviceHandle, 0x1, buffer, length, 300);
+	ret = usb_bulk_write(deviceHandle, 0x1, buffer, length, 5000);
 	if (ret < 0) {
 		FX_LOG(1, "%s: usb_bulk_write() failed: %s", __func__, usb_strerror())
 		return -1;
@@ -151,9 +151,9 @@ int fx_write(struct usb_dev_handle *deviceHandle, char *buffer, int length) {
 
 int fx_read(struct usb_dev_handle *deviceHandle, char *buffer, int length) {
 	int ret = 0;
-	ret = usb_bulk_read(deviceHandle, 0x82, buffer, length, 600);
+	ret = usb_bulk_read(deviceHandle, 0x82, buffer, length, 5000);
 	if (ret < 0) {
-		FX_LOG(1, "%s: usb_bulk_write() failed: %s", __func__, usb_strerror())
+		FX_LOG(1, "%s: usb_bulk_read() failed: %s", __func__, usb_strerror())
 		return -1;
 	}
 	FX_LOG(2, "Called %s() and got %i of %i requested bytes of data:", __func__, ret, length)

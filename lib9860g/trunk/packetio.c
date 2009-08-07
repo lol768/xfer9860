@@ -1,5 +1,6 @@
 /* FIXME: change to the logging interface */   /* Required for the logging messages */
 #include <stdio.h>
+#include <string.h>
 #include <usb.h> 
 
 #include "packetio.h"
@@ -10,6 +11,7 @@
 enum PacketType_e fx_defaultPacketType = CommandPacket;
 int fx_defaultPacketSubtype = 0;
 
+/* The following structure is used to name the type when printing a packet struct for debug purposes */
 struct PacketTypeSet_t packetTypeSet[8] = {
 	{DefaultPacket,		"DefaultPacket (INVALID)"},
 	{CommandPacket,		"CommandPacket"},
@@ -41,7 +43,7 @@ int fx_isTypeValid(enum PacketType_e type) {
 
 /* checks both the type and subtype fields */
 int fx_isTypeSubtypeValid(enum PacketType_e type, char subtype) {
-	if (!fx_isTypeValid(type)) { FX_LOG(1, "%s: Unrecognized packet type (%X) provided.", __func__, type) }
+	if (!fx_isTypeValid(type)) { FX_LOG(1, "%s: Unrecognized packet type (%X) provided.", __func__, type); return 0; }
 	switch(type) {
 		case DefaultPacket:
 			FX_LOG(1, "%s: The DefaultPacket type is not a real packet type and should not occur in packets.", __func__)
@@ -91,7 +93,7 @@ int fx_isTypeSubtypeValid(enum PacketType_e type, char subtype) {
 int fx_initializePacket(struct Packet_t *packet, enum PacketType_e type, char subtype) {
 /* FIXME: enable extended ack packets */
 
-	/* de-extend it, freeing allocated data */
+	/* de-extend it, freeing potentially allocated data */
 	fx_contractPacket(packet);
 	
 	/* set subtype and type of fresh packet */
@@ -141,6 +143,7 @@ int fx_contractPacket(struct Packet_t *packet) {
 		packet->extended = false;
 	} else {
 		FX_LOG(1, "%s: Packet was not extended. Skipping.", __func__)
+		packet->extended = false;	/* extended flag could be uninitialized, hence not 'true', AND not 'false' */
 	}
 	return 0;
 }
@@ -167,7 +170,7 @@ int fx_extendPacket(struct Packet_t *packet) {
 }
 
 int fx_attachDataPayload(struct Packet_t *packet, char *data, int size) {
-	if (size > 256) { FX_LOG(1, "%s: Payload size (%i) is too large", __func__, size) return -1; }
+	if (size > 256) { FX_LOG(1, "%s: Payload size (%i) is out of spec", __func__, size) return -1; }
 	if (data == NULL) { FX_LOG(1, "%s: Provided payload data pointer is NULL", __func__) return -1; }
 	if (packet->type != DataPacket || packet->extended == false || packet->d.dh == NULL) {
 		FX_LOG(1, "%s: Cannot attach to this packet. type=0x%x, extended=0x%x, dh=%p", __func__, packet->type, packet->extended, packet->d.dh)
@@ -192,7 +195,7 @@ int fx_encodePacket(struct Packet_t *packet, char *dest, int sizeLimit) {
 	pBuffer[0] = packet->type; /* Write type (can be used directly). We know it is valid. */
 	intToAschex(packet->subtype, pBuffer+1, 2); /* Write subtype */
 	
-	if (packet->extended == false) {
+	if (packet->extended == false) { /* non-extended packets are the easiest */
 		pBuffer[3] = '0'; /* EX */
 		cs = fx_calculateChecksum(pBuffer, currentSize);
 		currentSize = 6;
@@ -264,12 +267,31 @@ done:
 }
 
 int fx_send(struct usb_dev_handle* usb_handle, struct Packet_t *packet) {
+	char *data;
+	int size;
+	data = malloc(530);
+	if (data == NULL) {
+		FX_LOG(1, "%s: Allocation failed.", __func__)
+		return -1;
+	}
 	
-
-	/* TODO: send call */ 
- 	
-
-	return 0;
+	size = fx_encodePacket(packet, data, 530);
+	if (size < 0) {
+		FX_LOG(1, "%s: encoding packet failed.", __func__)
+		return -1;
+	}
+	
+	if (size == 0) {
+		/* should not happen, but whatever */
+		FX_LOG(1, "%s: Warn: encoding returned zero data, without errors", __func__)
+		return 0;
+	}
+	
+	/* we now have a packet ready for shipping. we reuse the size variable. */
+	
+	size = fx_write(usb_handle, data, size);
+	
+	return size;
 }
 
 int fx_receive(struct usb_dev_handle* usb_handle, struct Packet_t *packet) {
@@ -287,10 +309,11 @@ int fx_validatePacket(struct Packet_t *packet) {
 	/* VERIFY COMMAND PACKET */
 	if (packet->type == CommandPacket) {
 	/* TODO: move to usage of fx_isTypeSubtypeValid */
-		if ((subtype > 3 && subtype < 0x20) || subtype > 0x57 || (subtype > 0x33 && subtype < 0x40)) {
-			FX_LOG(1, "%s: Unrecognized packet subtype for cmd packet", __func__)
+		if (!fx_isTypeSubtypeValid(packet->type, packet->subtype)) {
+			FX_LOG(1, "%s: Subtype or type is invalid.", __func__)
 			return -2;
 		}
+		
 		if (packet->extended == false) { return 0; } /* nothing more to check */
 		
 		/* Packet is supposed to be extended from here on.. */
