@@ -7,38 +7,61 @@
 
 struct usb_dev_handle *deviceHandle;
 struct Packet_t myPacket;
+
 int main() {
-	char buffer[400];
-	char data[300] = "DATADATADATA";
-	int i;
-	for (i = 0; i < 256; i++) {
-		data[i] = i;
+	char buffer[0x400];
+	
+	struct Packet_t *packet;
+	int ret, interface = 0;
+	struct usb_device *device;
+	struct usb_dev_handle *deviceHandle;
+	fx_debugLevel = 3;
+	
+	
+	device = fx_findDevice();
+	
+	if (device == NULL) {
+		FX_LOG(1, "%s: Device not found on bus(es)", __func__)
+		return (int)NULL;
 	}
-	
-	fx_debugLevel = 2;
-	fx_initializePacket(&myPacket, DataPacket, 0x57);
-	fx_extendPacket(&myPacket);
-	// fx_setCommandParameter(&myPacket, 1, "lulz", 4);
-	myPacket.d.dh->current = 0x33;
-	myPacket.d.dh->total = 0x39;
-	myPacket.d.dh->data = data;
-	myPacket.d.dh->datasize = 256;
-	
-	fx_printPacketStruct(&myPacket);
-	fx_encodePacket(&myPacket, buffer, 400);
-	
-	fprintf(stderr, "FINISHED\n");
-/*	
-	deviceHandle = fx_claimDevice();
+
+	deviceHandle = usb_open(device);
 	if (deviceHandle == NULL) {
-		return -1;
+		FX_LOG(1, "%s: usb_open() failed: %s", __func__, usb_strerror())
+		return (int)NULL;
 	}
+
+	ret = usb_set_configuration(deviceHandle, 1);
+	if (ret < 0) { 
+		FX_LOG(1, "%s: usb_set_configuration() failed: %s", __func__, usb_strerror())
+		goto fail_close;
+	}
+
+	interface = usb_claim_interface(deviceHandle, 0);
+	if (interface < 0) {
+		FX_LOG(1, "%s, usb_claim_interface() failed: %s", __func__, usb_strerror())
+		goto fail_close;
+	}
+	printf("Connected! Acking.\n");
 	
-	fx_write(deviceHandle, buffer, 6);
+	usb_resetep(deviceHandle, 0);
+	
+	fx_initializePacket(packet, CheckPacket, 0);
+	fx_send(deviceHandle, packet);
+	usb_set_debug(255);
+	fx_read(deviceHandle, buffer, 7);	/* just assume it is an ack */
+	
+	fx_initializePacket(packet, CommandPacket, CMD_REQINFO);
+	fx_send(deviceHandle, packet);
+
 	fx_read(deviceHandle, buffer, 6);
-	fx_
-	fx_write(deviceHandle, "\x18\x30\x31\x30\x36\x46", 6);
+	
+	/*fx_initializePacket(packet, TerminatePacket, 0);
+	fx_send(deviceHandle, packet);*/
+	
+fail_close:
+	fflush(stdout);
+	fflush(stderr);
 	fx_releaseDevice(deviceHandle, 0);
-*/
 	return 0;
 }
