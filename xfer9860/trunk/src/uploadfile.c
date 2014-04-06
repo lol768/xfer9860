@@ -1,7 +1,8 @@
 /*******************************************************************************
 	xfer9860 - a Casio fx-9860G (SD) communication utility
-	Copyright (C) 2007
-		Andreas Bertheussen <andreasmarcel@gmail.com>
+	Copyright (C)
+	  2007-2014	Andreas Bertheussen <andreasmarcel@gmail.com>
+	  2014		Bruno Leon Alata <brleoal@gmail.com>, libusb-1.0 port
 
 	This program is free software; you can redistribute it and/or
 	modify it under the terms of the GNU General Public License
@@ -19,23 +20,25 @@
 	MA  02110-1301, USA.
 *******************************************************************************/
 
+
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include <sys/types.h>	/* stat()*/
 #include <sys/stat.h>	/**/
 #include <math.h>	/* ceil() */
-#include <usb.h>
+#include <libusb-1.0/libusb.h>
 
 #include "Casio9860.h"
 #include "usbio.h"
 #include "config.h"
 
 int uploadFile(char* sourceFileName, char* destFileName, int throttleSetting) {
-	int ret = 0, i, destFileNameLength, flashCapacity, packetCount;
+	int i, destFileNameLength, flashCapacity, packetCount;
 	char *fData, *sData, *buffer;
 	struct stat sourceFileStatus;
-	struct usb_dev_handle *usb_handle;
+	struct libusb_device_handle *usb_handle;
 
 	FILE *sourceFile = fopen(sourceFileName, "rb");
 	if (sourceFile == NULL) {
@@ -105,7 +108,7 @@ int uploadFile(char* sourceFileName, char* destFileName, int throttleSetting) {
 			goto exit_unalloc;
 		}
 		resendCount++;
-		ret = fx_sendData(usb_handle, buffer, ST_FILE_TO_FLASH, packetCount, i+1, sData, escapedBytes);
+		fx_sendData(usb_handle, buffer, ST_FILE_TO_FLASH, packetCount, i+1, sData, escapedBytes);
 		if (i % 4 == 0) { printf("#"); fflush(stdout); } /* indicates every 1kB */
 		if (ReadUSB(usb_handle, buffer, 6) == 0) {
 			printf("ERR: Got no response, retrying.\n");

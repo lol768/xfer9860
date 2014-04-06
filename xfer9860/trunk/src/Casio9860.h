@@ -1,8 +1,9 @@
 /*******************************************************************************
 	xfer9860 - a Casio fx-9860G (SD) communication utility
-	Copyright (C) 2007
-		Manuel Naranjo <naranjo.manuel@gmail.com>
-		Andreas Bertheussen <andreasmarcel@gmail.com>
+	Copyright (C)
+	  2007		Manuel Naranjo <naranjo.manuel@gmail.com>
+	  2007-2014	Andreas Bertheussen <andreasmarcel@gmail.com>
+	  2014		Bruno Leon Alata <brleoal@gmail.com>, libusb-1.0 port
 
 	This program is free software; you can redistribute it and/or
 	modify it under the terms of the GNU General Public License
@@ -23,7 +24,7 @@
 #ifndef CASIO_9860_H
 #define CASIO_9860_H
 
-#include <usb.h>
+#include <libusb-1.0/libusb.h>
 
 #define C9860_VENDOR_ID		0x07CF
 #define C9860_PRODUCT_ID	0x6101
@@ -78,29 +79,27 @@
 
 #define MAX_DATA_PAYLOAD 256
 
-struct usb_dev_handle *fx_getDeviceHandle();
-int fx_initDevice(struct usb_dev_handle *usb_handle);
-void fx_releaseDeviceHandle(struct usb_dev_handle*);
-
-struct usb_device *device_init(void);
+struct libusb_device_handle *fx_getDeviceHandle();
+int fx_initDevice(struct libusb_device_handle *usb_handle);
+void fx_releaseDeviceHandle(struct libusb_device_handle*);
 
 /* routine functions */
-int fx_doConnVer(struct usb_dev_handle*);
-int fx_getFlashCapacity(struct usb_dev_handle*, char*);
-int fx_getMCSCapacity(struct usb_dev_handle*);
+int fx_doConnVer(struct libusb_device_handle*);
+int fx_getFlashCapacity(struct libusb_device_handle*, char*);
+int fx_getMCSCapacity(struct libusb_device_handle*);
 /* packet functions */
-int fx_sendComplete(struct usb_dev_handle*, char*);
-int fx_sendVerify(struct usb_dev_handle*, char*, char*);
-int fx_sendTerminate(struct usb_dev_handle*, char*);
-int fx_sendPositive(struct usb_dev_handle*, char*, char);
-int fx_sendNegative(struct usb_dev_handle*, char*, char);
-int fx_sendChange_Direction(struct usb_dev_handle*, char*);
-int fx_sendFlash_Capacity_Request(struct usb_dev_handle*, char*, char*);
-int fx_sendFlashCollectGarbage(struct usb_dev_handle*, char*, char*);
-int fx_sendMCSCapacityRequest(struct usb_dev_handle*, char*);
-int fx_sendFlashFileTransmission(struct usb_dev_handle*, char*, int, char*, char*);
-int fx_sendFlashFileTransmissionRequest(struct usb_dev_handle*, char*, char*, char*);
-int fx_sendData(struct usb_dev_handle*, char*, char*, int, int, char*, int);
+int fx_sendComplete(struct libusb_device_handle*, char*);
+int fx_sendVerify(struct libusb_device_handle*, char*, char*);
+int fx_sendTerminate(struct libusb_device_handle*, char*);
+int fx_sendPositive(struct libusb_device_handle*, char*, char);
+int fx_sendNegative(struct libusb_device_handle*, char*, char);
+int fx_sendChange_Direction(struct libusb_device_handle*, char*);
+int fx_sendFlash_Capacity_Request(struct libusb_device_handle*, char*, char*);
+int fx_sendFlashCollectGarbage(struct libusb_device_handle*, char*, char*);
+int fx_sendMCSCapacityRequest(struct libusb_device_handle*, char*);
+int fx_sendFlashFileTransmission(struct libusb_device_handle*, char*, int, char*, char*);
+int fx_sendFlashFileTransmissionRequest(struct libusb_device_handle*, char*, char*, char*);
+int fx_sendData(struct libusb_device_handle*, char*, char*, int, int, char*, int);
 
 int fx_getPacketType(char*);
 
