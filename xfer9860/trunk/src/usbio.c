@@ -1,7 +1,8 @@
 /*******************************************************************************
 	xfer9860 - a Casio fx-9860G (SD) communication utility
-	Copyright (C) 2007
-		Andreas Bertheussen <andreasmarcel@gmail.com>
+	Copyright (C)
+	  2007-2014	Andreas Bertheussen <andreasmarcel@gmail.com>
+	  2014		Bruno Leon Alata <brleoal@gmail.com>, libusb-1.0 port
 
 	This program is free software; you can redistribute it and/or
 	modify it under the terms of the GNU General Public License
@@ -23,7 +24,7 @@
 #include "config.h"
 
 #include <stdio.h>
-#include <usb.h>
+#include <libusb-1.0/libusb.h>
 
 void debug(int input, char* array, int len){
 #ifdef SNOOP
@@ -70,18 +71,22 @@ void debug(int input, char* array, int len){
 #endif /* SNOOP */
 }
 
-int ReadUSB(struct usb_dev_handle *usb_handle, char *buffer, int length) {
+int ReadUSB(struct libusb_device_handle *usb_handle, char *buffer, int length) {
 	int ret = 0;
-	ret = usb_bulk_read(usb_handle, 0x82, buffer, length, USB_READ_TIMEOUT);
+	int BytesRead = 0;
+
+	ret = libusb_bulk_transfer(usb_handle, 0x82, buffer, length, &BytesRead, USB_READ_TIMEOUT);
 	if (ret < 0) { printf("ERR: ReadUSB(): Could not read: %i\n", ret); }
-	debug(1, buffer, ret);
-	return ret;
+	debug(1, buffer, BytesRead);
+	return BytesRead;
 }
 
-int WriteUSB(struct usb_dev_handle *usb_handle, char *buffer, int length) {
+int WriteUSB(struct libusb_device_handle *usb_handle, char *buffer, int length) {
 	int ret = 0;
-	ret = usb_bulk_write(usb_handle, 0x1, buffer, length, USB_WRITE_TIMEOUT);
+	int BytesWritten = 0;
+
+	ret = libusb_bulk_transfer(usb_handle, 0x1, buffer, length, &BytesWritten, USB_WRITE_TIMEOUT);
 	if (ret < 0) { printf("ERR: WriteUSB: Could not write: %i\n", ret); }
-	debug(0, buffer, ret);
-	return ret;
+	debug(0, buffer, BytesWritten);
+	return BytesWritten;
 }

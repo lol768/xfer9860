@@ -1,8 +1,9 @@
 /*******************************************************************************
 	xfer9860 - a Casio fx-9860G (SD) communication utility
-	Copyright (C) 2007
-		Manuel Naranjo <naranjo.manuel@gmail.com>
-		Andreas Bertheussen <andreasmarcel@gmail.com>
+	Copyright (C)
+	  2007		Manuel Naranjo <naranjo.manuel@gmail.com>
+	  2007-2014	Andreas Bertheussen <andreasmarcel@gmail.com>
+	  2014		Bruno Leon Alata <brleoal@gmail.com>, libusb-1.0 port
 
 	This program is free software; you can redistribute it and/or
 	modify it under the terms of the GNU General Public License
@@ -21,71 +22,58 @@
 *******************************************************************************/
 
 #include <stdio.h>
-#include <usb.h>
+#include <stdlib.h>
+#include <libusb-1.0/libusb.h>
 #include <string.h>
 
 #include "Casio9860.h"
 #include "usbio.h"
 
-struct usb_dev_handle* fx_getDeviceHandle() {
+struct libusb_device_handle* fx_getDeviceHandle() {
 	int ret = 0;
-	struct usb_device *usb_dev;
-	struct usb_dev_handle *usb_handle;
+	struct libusb_device_handle *usb_handle;
 
-	usb_dev = (struct usb_device*)device_init();
-	if (usb_dev == NULL) {
-		return NULL; /* this is a common 'error', won't print error message */
+	struct libusb_context *ctx = NULL;//a libusb session
+	int r = libusb_init(&ctx);
+	if(r < 0){
+	   printf("\nInit Error %d\n",r);
+	   return NULL;
 	}
-
-	usb_handle = (struct usb_dev_handle*)usb_open(usb_dev);
+	libusb_set_debug(ctx, 3); //set verbosity level to 3, as suggested in the documentation
+	usb_handle = libusb_open_device_with_vid_pid(ctx, C9860_VENDOR_ID, C9860_PRODUCT_ID); //these are vendorID and productID I found for my usb device
 	if (usb_handle == NULL) {
-		printf("\nERR: usb_open() returned NULL.\n");
+		printf("\nERR: libusb_open() returned NULL.\n");
 		return NULL;
 	}
 
-	ret = usb_set_configuration(usb_handle, 1);
+	ret = libusb_set_configuration(usb_handle, 1);
 	if (ret < 0) { /* needed on WIN32 */
-		printf("\nERR: usb_set_configuration(): %i\n", ret);
-		usb_close(usb_handle);
+		printf("\nERR: libusb_set_configuration(): %i\n", ret);
+		libusb_close(usb_handle);
 		return NULL;
 	}
 
-	ret = usb_claim_interface(usb_handle, 0);
+	ret = libusb_claim_interface(usb_handle, 0);
 	if (ret < 0) {
-		printf("\nERR: usb_claim_interface(): %i\n", ret);
-		usb_close(usb_handle);
+		printf("\nERR: libusb_claim_interface(): %i\n", ret);
+		libusb_close(usb_handle);
 		return NULL;
 	}
 
 	return usb_handle;
 }
 
-void fx_releaseDeviceHandle(struct usb_dev_handle* usb_handle) {
-	usb_release_interface(usb_handle, 0);
+void fx_releaseDeviceHandle(struct libusb_device_handle* usb_handle) {
+	libusb_release_interface(usb_handle, 0);
 	return;
 }
 
-struct usb_device *device_init(void) {
-	struct usb_bus *usb_bus;
-	struct usb_device *dev;
-	usb_init();
-	usb_find_busses();
-	usb_find_devices();
-	for (usb_bus = usb_busses; usb_bus; usb_bus = usb_bus->next) {
-		for (dev = usb_bus->devices; dev; dev = dev->next) {
-			if ((dev->descriptor.idVendor == C9860_VENDOR_ID) && (dev->descriptor.idProduct == C9860_PRODUCT_ID))
-				return dev;
-		}
-	}
-	return NULL;
-}
-
-int fx_initDevice(struct usb_dev_handle *usb_handle) {
+int fx_initDevice(struct libusb_device_handle *usb_handle) {
 	int ret;
 	char* buffer;
 	buffer = (char*)calloc(0x29, sizeof(char));
 
-	ret = usb_control_msg(usb_handle, 0x80, 0x6, 0x100, 0, buffer, 0x12, 200);
+	ret = libusb_control_transfer(usb_handle, 0x80, 0x6, 0x100, 0, buffer, 0x12, 200);
 	debug(1, buffer, ret);
 
 	if (ret < 0) {
@@ -93,14 +81,14 @@ int fx_initDevice(struct usb_dev_handle *usb_handle) {
 		goto exit;
 	}
 
-	ret = usb_control_msg(usb_handle, 0x80, 0x6, 0x200, 0, buffer, 0x29, 250);
+	ret = libusb_control_transfer(usb_handle, 0x80, 0x6, 0x200, 0, buffer, 0x29, 250);
 	debug(1, buffer, ret);
 	if (ret < 0) {
 		fprintf(stderr, "\nERR: fx_initDevice(), 2'nd control: %i \n", ret);
 		goto exit;
 	}
 
-	ret = usb_control_msg(usb_handle, 0x41, 0x1, 0x0, 0, buffer, 0x0, 250);
+	ret = libusb_control_transfer(usb_handle, 0x41, 0x1, 0x0, 0, buffer, 0x0, 250);
 	debug(1, buffer, ret);
 	if (ret < 0) {
 		fprintf(stderr, "\nERR: fx_initDevice(), 3'rd control: %i \n", ret);
@@ -112,12 +100,12 @@ exit:
 	return ret;
 }
 
-int fx_sendComplete(struct usb_dev_handle *usb_handle, char *buffer) {
+int fx_sendComplete(struct libusb_device_handle *usb_handle, char *buffer) {
 	memcpy(buffer, "\x01\x30\x30\x30\x37\x30", 6);
 	return WriteUSB(usb_handle, buffer, 6);
 }
 
-int fx_sendVerify(struct usb_dev_handle *usb_handle, char *buffer, char *type) {
+int fx_sendVerify(struct libusb_device_handle *usb_handle, char *buffer, char *type) {
 	/* Type: 0x05
 	 * ST: 00 or 01*/
 	memcpy(buffer, "\x05\x30\x30\x30", 4);
@@ -128,7 +116,7 @@ int fx_sendVerify(struct usb_dev_handle *usb_handle, char *buffer, char *type) {
 	return WriteUSB(usb_handle, buffer, 6);
 }
 
-int fx_doConnVer(struct usb_dev_handle *usb_handle) {
+int fx_doConnVer(struct libusb_device_handle *usb_handle) {
 	char *buffer = (char*)calloc(6, sizeof(char));
 	if (buffer == NULL) {printf("ERR: fx_doConnVer(): allocation failed.\n");}
 	fx_sendVerify(usb_handle, buffer, "00");	/* sends connver for start of communication */
@@ -142,14 +130,14 @@ int fx_doConnVer(struct usb_dev_handle *usb_handle) {
 	}
 }
 
-int fx_sendTerminate(struct usb_dev_handle *usb_handle, char *buffer) {
+int fx_sendTerminate(struct libusb_device_handle *usb_handle, char *buffer) {
 	/* Type: 0x18
 	 * ST: 01 */
 	memcpy(buffer, "\x18\x30\x31\x30\x36\x46", 6);
 	return WriteUSB(usb_handle, buffer, 6);
 }
 
-int fx_sendPositive(struct usb_dev_handle *usb_handle, char *buffer, char type) {
+int fx_sendPositive(struct libusb_device_handle *usb_handle, char *buffer, char type) {
 	/* Type: 0x06
 	 * ST: given as argument */
 	memcpy(buffer, "\x06\x30\x30\x30", 4);
@@ -168,7 +156,7 @@ int fx_getPacketType(char *buffer) {
 		return -1;
 }
 
-int fx_sendNegative(struct usb_dev_handle *usb_handle, char *buffer, char type) {
+int fx_sendNegative(struct libusb_device_handle *usb_handle, char *buffer, char type) {
 	/* Type 0x05
 	 * ST: given as argument */
 	memcpy(buffer, "\x05\x30\x30\x30", 4);
@@ -179,12 +167,12 @@ int fx_sendNegative(struct usb_dev_handle *usb_handle, char *buffer, char type) 
 	return WriteUSB(usb_handle, buffer, 6);
 }
 
-int fx_sendChange_Direction(struct usb_dev_handle *usb_handle, char *buffer) {
+int fx_sendChange_Direction(struct libusb_device_handle *usb_handle, char *buffer) {
 	memcpy(buffer, "\x03\x30\x30\x30\x37\x30", 6);
 	return WriteUSB(usb_handle, buffer, 6);
 }
 
-int fx_sendFlash_Capacity_Request(struct usb_dev_handle *usb_handle, char *buffer, char *device) {
+int fx_sendFlash_Capacity_Request(struct libusb_device_handle *usb_handle, char *buffer, char *device) {
 	short int len = strlen(device);
 	memcpy(buffer, "\x01\x34\x42\x31", 4);
 	sprintf(buffer+OFF_DS, "%04X", 24+len);
@@ -197,14 +185,14 @@ int fx_sendFlash_Capacity_Request(struct usb_dev_handle *usb_handle, char *buffe
 	return WriteUSB(usb_handle, buffer, 34+len);
 }
 
-int fx_sendMCSCapacityRequest(struct usb_dev_handle *usb_handle, char *buffer) {
+int fx_sendMCSCapacityRequest(struct libusb_device_handle *usb_handle, char *buffer) {
 	memcpy(buffer, "\x01\x32\x42\x30", 4);	/* ST is 42 */
 	fx_appendChecksum(buffer, 4);
 
 	return WriteUSB(usb_handle, buffer, 6);
 }
 
-int fx_sendFlashCollectGarbage(struct usb_dev_handle *usb_handle, char *buffer, char *device) {
+int fx_sendFlashCollectGarbage(struct libusb_device_handle *usb_handle, char *buffer, char *device) {
 	short int len = strlen(device);
 	memcpy(buffer, "\x01\x35\x31\x31", 4);	/* ST 51 */
 	sprintf(buffer+OFF_DS, "%04X", 24+len);
@@ -218,7 +206,7 @@ int fx_sendFlashCollectGarbage(struct usb_dev_handle *usb_handle, char *buffer, 
 
 }
 
-int fx_getFlashCapacity(struct usb_dev_handle *usb_handle, char *device) {
+int fx_getFlashCapacity(struct libusb_device_handle *usb_handle, char *device) {
 	int freeSize = 0;
 	char * buffer = (char*)calloc(40,sizeof(char));
 		if (buffer == NULL) { printf("ERR: fx_getFlashCapacity: alloc error\n"); return -1; }
@@ -241,7 +229,7 @@ int fx_getFlashCapacity(struct usb_dev_handle *usb_handle, char *device) {
 	return freeSize; /* converts 'hex-ascii' to int */
 }
 
-int fx_getMCSCapacity(struct usb_dev_handle *usb_handle) {
+int fx_getMCSCapacity(struct libusb_device_handle *usb_handle) {
 	int freeSize = 0;
 	char * buffer = (char*)calloc(40,sizeof(char));
 	fx_sendMCSCapacityRequest(usb_handle, buffer);
@@ -262,7 +250,7 @@ int fx_getMCSCapacity(struct usb_dev_handle *usb_handle) {
 	return freeSize;
 }
 
-int fx_sendFlashFileTransmission(struct usb_dev_handle *usb_handle, char *buffer, int filesize, char *filename, char *device) {
+int fx_sendFlashFileTransmission(struct libusb_device_handle *usb_handle, char *buffer, int filesize, char *filename, char *device) {
 	short int fnsize = strlen(filename);
 	short int devsize = strlen(device);
 	memcpy(buffer, "\x01\x34\x35\x31", 4); /* T, ST = 45, DF */
@@ -277,7 +265,7 @@ int fx_sendFlashFileTransmission(struct usb_dev_handle *usb_handle, char *buffer
 	return WriteUSB(usb_handle, buffer, 34+fnsize+devsize);
 }
 
-int fx_sendFlashFileTransmissionRequest(struct usb_dev_handle *usb_handle, char* buffer, char* filename, char* device) {
+int fx_sendFlashFileTransmissionRequest(struct libusb_device_handle *usb_handle, char* buffer, char* filename, char* device) {
 	short int fnsize = strlen(filename);
 	short int devsize = strlen(device);
 	memcpy(buffer, "\x01\x34\x34\x31", 4); /* T, ST = 44, DF */
@@ -292,7 +280,7 @@ int fx_sendFlashFileTransmissionRequest(struct usb_dev_handle *usb_handle, char*
 	return WriteUSB(usb_handle, buffer, 34+fnsize+devsize);
 }
 
-int fx_sendData(struct usb_dev_handle *usb_handle, char *buffer, char* subtype, int total, int number, char *data, int length) {
+int fx_sendData(struct libusb_device_handle *usb_handle, char *buffer, char* subtype, int total, int number, char *data, int length) {
 	memcpy(buffer, "\x02\x00\x00\x31", 4); /* T, DF, leaves a hole for ST */
 	 memcpy(buffer+1, subtype, 2); /* ST */
 	sprintf(buffer+OFF_DS, "%04X", 8+length); /* DS, 4 b */

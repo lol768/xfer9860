@@ -1,6 +1,6 @@
 /*******************************************************************************
 	xfer9860 - a Casio fx-9860G (SD) communication utility
-	Copyright (C) 2007
+	Copyright (C) 2007-2014
 		Andreas Bertheussen <andreasmarcel@gmail.com>
 
 	This program is free software; you can redistribute it and/or
@@ -44,7 +44,7 @@ int main(int argc, char *argv[]) {
 	int uploadFileFlag = 0;
 	int downloadFileFlag = 0;
 
-	printf("--- xfer9860 %s  Copyright (C) 2007 Andreas Bertheussen and Manuel Naranjo.\n", VERSION);
+	printf("--- xfer9860 %s  Copyright (C) 2007-2014 Andreas Bertheussen, Manuel Naranjo and Bruno L. Alata..\n", VERSION);
 
 	while ((opt = getopt(argc, argv, "t:u:d:ioha")) != -1) {
 		switch(opt) {

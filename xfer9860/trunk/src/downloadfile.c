@@ -1,7 +1,8 @@
 /*******************************************************************************
 	xfer9860 - a Casio fx-9860G (SD) communication utility
-	Copyright (C) 2007
-		Andreas Bertheussen <andreasmarcel@gmail.com>
+	Copyright (C)
+	  2007-2014	Andreas Bertheussen <andreasmarcel@gmail.com>
+	  2014		Bruno Leon Alata <brleoal@gmail.com>, libusb-1.0 port
 
 	This program is free software; you can redistribute it and/or
 	modify it under the terms of the GNU General Public License
@@ -27,24 +28,24 @@
 #include "usbio.h"
 #include "config.h"
 
-int readPacket(struct usb_dev_handle *usb_handle, char *buffer) {
+int readPacket(struct libusb_device_handle *usb_handle, char *buffer) {
 	/* This basically works by receiving until all data has been read, because
 	 * the calculator sometimes writes its packets in chunks. This makes downloading
 	 * quite slow, as we have to have a minimum read timeout to make sure packets are
 	 * read correctly, but at the same time allows short waiting if no data is ready. */
 	int pos = 0, read = 0;
+	int transferred = 0; /*output location for the number of bytes actually transferred*/
 	do {
-		read = usb_bulk_read(usb_handle, 0x82, buffer+pos, ((MAX_DATA_PAYLOAD*2)+18)-pos, 40);
-
+		read = libusb_bulk_transfer(usb_handle, 0x82, buffer+pos, ((MAX_DATA_PAYLOAD*2)+18)-pos, &transferred, 40);
 		/*read = ReadUSB(usb_handle, buffer+pos, ((MAX_DATA_PAYLOAD*2)+18)-pos);*/
-		pos += read;
-	} while (read > 0);
+      	        pos += transferred;
+	} while (read == 0);
 
 	return pos;
 }
 
 int downloadFile(char* sourceFileName, char* destFileName, int throttleSetting) {
-	struct usb_dev_handle *usb_handle;
+	struct libusb_device_handle *usb_handle;
 	char *buffer, *fData;
 	int fileSize = 0;
 	/* The following are only used in the main receive loop (see below) */

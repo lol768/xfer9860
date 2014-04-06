@@ -1,7 +1,8 @@
 /*******************************************************************************
 	xfer9860 - a Casio fx-9860G (SD) communication utility
-	Copyright (C) 2007
-		Andreas Bertheussen <andreasmarcel@gmail.com>
+	Copyright (C)
+	  2007-2014	Andreas Bertheussen <andreasmarcel@gmail.com>
+	  2014		Bruno Leon Alata <brleoal@gmail.com>, libusb-1.0 port
 
 	This program is free software; you can redistribute it and/or
 	modify it under the terms of the GNU General Public License
@@ -19,14 +20,16 @@
 	MA  02110-1301, USA.
 *******************************************************************************/
 
+
 #include <stdio.h>
-#include <usb.h>
+#include <stdlib.h>
+#include <libusb-1.0/libusb.h>
 
 #include "Casio9860.h"
 #include "config.h"
 
 int getInfo(int throttleSetting) {
-	struct usb_dev_handle *usb_handle;
+	struct libusb_device_handle *usb_handle;
 	int mcsCapacity, flashCapacity;
 	char* buffer = (char*)calloc(142, sizeof(char));
 	printf("[>] Setting up USB connection.. ");
