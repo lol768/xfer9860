@@ -40,3 +40,4 @@ The libusb project <http://libusb.sourceforge.net> for the nice API.
 Greg Kroah-Hartman <greg@kroah.com> for initial usb code.
 Casio Kingdom <www.casiokingdom.org>
 UCF <www.casiocalc.org> and their members for support and interest.
+Bruno Leon Alata <brleoal@gmail.com> for bothering to port it to libusb-1.0

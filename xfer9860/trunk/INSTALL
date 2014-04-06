@@ -1,6 +1,6 @@
 = Compiling from source ========================================================
 
-You need libusb and SCons (requires python). To start compilation, run:
+You need libusb-1.0 and SCons (requires python). To start compilation, run:
   $ scons -Q
 
 The executable is located in `src/', and can be run with:

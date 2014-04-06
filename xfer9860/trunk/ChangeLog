@@ -1,3 +1,6 @@
+0.2.2:
+	* Moved to libusb-1.0 that will hopefully work with 9750-GII calculators.
+
 0.2.1:
 	* Cleaned up code to avoid compiler warnings
 	* Build script is updated for the newer SCons 1.*
