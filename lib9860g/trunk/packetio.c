@@ -141,9 +141,6 @@ int fx_contractPacket(struct Packet_t *packet) {
 		}
 		free(packet->d.ch); /* free extension header */
 		packet->extended = false;
-	} else {
-		FX_LOG(1, "%s: Packet was not extended. Skipping.", __func__)
-		packet->extended = false;	/* extended flag could be uninitialized, hence not 'true', AND not 'false' */
 	}
 	return 0;
 }
@@ -288,7 +285,6 @@ int fx_send(struct usb_dev_handle* usb_handle, struct Packet_t *packet) {
 	}
 	
 	/* we now have a packet ready for shipping. we reuse the size variable. */
-	
 	size = fx_write(usb_handle, data, size);
 	
 	return size;
@@ -402,7 +398,7 @@ int fx_validatePacket(struct Packet_t *packet) {
 
 int fx_calculateChecksum(char *packet, int length) {
 	int i;
-	char sum;
+	char sum = 0;
 	for (i = 1; i < length; i++) { /* skip T field */
 		sum+= packet[i];
 	}

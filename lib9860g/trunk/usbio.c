@@ -156,8 +156,8 @@ int fx_read(struct usb_dev_handle *deviceHandle, char *buffer, int length) {
 		FX_LOG(1, "%s: usb_bulk_read() failed: %s", __func__, usb_strerror())
 		return -1;
 	}
-	FX_LOG(2, "Called %s() and got %i of %i requested bytes of data:", __func__, ret, length)
-	if (2 <= fx_debugLevel) { fx_printData(buffer, ret, 16, 1); }
+	FX_LOG(2, "%s(): got %i of %i requested bytes of data:\n", __func__, ret, length)
+	if (2 <= fx_debugLevel && ret > 0) { fx_printData(buffer, ret, 16, 1); }
 
 	return ret;
 }
