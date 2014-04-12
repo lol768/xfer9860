@@ -72,6 +72,8 @@
 #define TERM_TIMEDOUT	2
 #define TERM_ABORTOW	3	/* FIXME: better name*/
 
+#include <stdbool.h>
+
 enum PacketType_e {
 	DefaultPacket=0, /* Only used to signal to fx_initializePacket to create with the default type */
 	CommandPacket=1,
@@ -88,8 +90,6 @@ struct PacketTypeSet_t {
 	char name[24];
 };
 
-enum boolean { false=0, true=1 };
-
 union SubHeader_t {
 	struct DataHeader_t* dh;	/* the usage of dh or ch is dependant */
 	struct CommandHeader_t* ch;	/* on the type of packet */
@@ -98,7 +98,7 @@ union SubHeader_t {
 struct Packet_t {
 	enum PacketType_e type;
 	char subtype;
-	enum boolean extended;	/// Indicates if a SubHeader is used in the packet.
+	bool extended;	/// Indicates if a SubHeader is used in the packet.
 	union SubHeader_t d;
 	
 };

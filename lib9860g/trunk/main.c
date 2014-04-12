@@ -11,11 +11,11 @@ struct Packet_t myPacket;
 int main() {
 	char buffer[0x400];
 	
-	struct Packet_t *packet;
+	struct Packet_t packet;
 	int ret, interface = 0;
 	struct usb_device *device;
 	struct usb_dev_handle *deviceHandle;
-	fx_debugLevel = 3;
+	fx_debugLevel = 10;
 	
 	
 	device = fx_findDevice();
@@ -44,20 +44,25 @@ int main() {
 	}
 	printf("Connected! Acking.\n");
 	
-	usb_resetep(deviceHandle, 0);
-	
-	fx_initializePacket(packet, CheckPacket, 0);
-	fx_send(deviceHandle, packet);
+	//usb_resetep(deviceHandle, 0);
+	char *buf = (char*)calloc(0x29, sizeof(char));
+	usb_control_msg(deviceHandle, 0x80, 6, 0x100, 0, buf, 0x12, 200);
+	usb_control_msg(deviceHandle, 0x80, 6, 0x200, 0, buf, 0x29, 250);
+	usb_control_msg(deviceHandle, 0x41, 1, 0, 0, buf, 0, 250);
+	fx_initializePacket(&packet, CheckPacket, 0);
+	fx_send(deviceHandle, &packet);
 	usb_set_debug(255);
-	fx_read(deviceHandle, buffer, 7);	/* just assume it is an ack */
+	fx_read(deviceHandle, buffer, 6);	/* just assume it is an ack */
 	
-	fx_initializePacket(packet, CommandPacket, CMD_REQINFO);
-	fx_send(deviceHandle, packet);
+	fx_send(deviceHandle, &packet);
+	fx_read(deviceHandle, buffer, 6);	/* just assume it is an ack */
+	//fx_initializePacket(&packet, CommandPacket, CMD_REQINFO);
+	//fx_send(deviceHandle, &packet);
 
-	fx_read(deviceHandle, buffer, 6);
+	//fx_read(deviceHandle, buffer, 6);
 	
-	/*fx_initializePacket(packet, TerminatePacket, 0);
-	fx_send(deviceHandle, packet);*/
+	fx_initializePacket(&packet, TerminatePacket, 0);
+	fx_send(deviceHandle, &packet);
 	
 fail_close:
 	fflush(stdout);
