@@ -22,7 +22,7 @@
 
 #include "usbio.h"
 #include "config.h"
-
+#include "Casio9860.h"
 #include <stdio.h>
 #include <libusb-1.0/libusb.h>
 
@@ -76,6 +76,11 @@ int ReadUSB(struct libusb_device_handle *usb_handle, char *buffer, int length) {
 	int BytesRead = 0;
 
 	ret = libusb_bulk_transfer(usb_handle, 0x82, buffer, length, &BytesRead, USB_READ_TIMEOUT);
+	if (fx_getPacketType(buffer) != T_POSITIVE) {
+	     ret = libusb_bulk_transfer(usb_handle,0x82,buffer,length, &BytesRead,USB_READ_TIMEOUT);
+	}
+
+	
 	if (ret < 0) { printf("ERR: ReadUSB(): Could not read: %i\n", ret); }
 	debug(1, buffer, BytesRead);
 	return BytesRead;
