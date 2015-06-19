@@ -70,7 +70,7 @@ int uploadFile(char* sourceFileName, char* destFileName, int throttleSetting) {
 	printf("Connected!\n");
 
 	printf("[>] Verifying device.. ");
-	if (fx_doConnVer(usb_handle) != 0) { printf("Failed.\n"); }
+	if (fx_doConnVer(usb_handle) != 0) { printf("Failed.\n"); goto exit_release; }
 	else { printf("Done!\n"); }
 
 	printf("[>] Requesting fls0 capacity.. ");
