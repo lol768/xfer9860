@@ -1,3 +1,0 @@
-o Implement command-line switch for choosing ASCII/binary transfer mode.
-o Transfer progress indicator, that does not scroll like crazy on big transfers.
-

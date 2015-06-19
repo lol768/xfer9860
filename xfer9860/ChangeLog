@@ -1,9 +1,17 @@
-0.2.1:
+0.2.3 (2015-06-19):
+	* Patch USBRead function to make utility work with newer fx-9860GII
+	  calculators.
+	* Push fork to GitHub
+
+0.2.2 (2014-04-06):
+	* Moved to libusb-1.0 that will hopefully work with 9750-GII calculators.
+
+0.2.1 (2008-10-16):
 	* Cleaned up code to avoid compiler warnings
 	* Build script is updated for the newer SCons 1.*
 	* Build script links math library
 
-0.2:
+0.2 (2007-07-30):
 	* Rewritten codebase, allows command line parameters
 	* File download support
 	* Calculator information support
@@ -11,6 +19,6 @@
 	* Memory optimization support
 	* New SCons-based build system
 
-0.1:
+0.1 (2007-06-26):
 	* Initial Release
 	* File upload support
